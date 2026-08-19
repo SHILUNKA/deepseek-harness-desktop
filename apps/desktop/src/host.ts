@@ -32,6 +32,8 @@ import {
   loadOptionalPatches,
   loadProfile,
   PROFILE_PATCH_FILENAME,
+  watchUserPatches,
+  type Profile,
 } from '@deepseek-ai/dsh-app-boot'
 import { provideCmdline } from '@deepseek-ai/dsh-cmdline'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
@@ -99,6 +101,43 @@ function homePatchPath(): string {
 function resolveTelemetryPatch(disabledEnv: string | undefined, hasRow: boolean): PatchOptions | undefined {
   if ((disabledEnv ?? '') === '' || !hasRow) return undefined
   return { id: TELEMETRY_ROW_ID, disabled: true }
+}
+
+/**
+ * Keep both user patch layers live, so an edit to a `cordis.patch.yml` takes
+ * effect without restarting the app. Composition is what mounts an MCP server
+ * or any other plugin row, so a desktop user editing that file — or a settings
+ * surface writing it — must not need a relaunch to see the result.
+ *
+ * The web bundle disables the shared module-reload `hmr` row, so a watch-only
+ * HMR instance with no module roots is mounted here; it needs the timer service,
+ * which a composition may also leave out.
+ * @param ctx - the booted root context.
+ * @param profile - the loaded profile, for its own patch path.
+ * @param bundlePatches - the bundle layers, recomposed below the user layers.
+ * @param overlays - the app's own overlays, recomposed above the user layers.
+ */
+async function watchPatchLayers(
+  ctx: Context,
+  profile: Profile,
+  bundlePatches: readonly PatchOptions[],
+  overlays: readonly PatchOptions[],
+): Promise<void> {
+  // Fresh clones per generation: the include pushes `insert` rows into the
+  // mounted tree by reference, so reusing one parsed object across reloads
+  // would bake a user override into the bundle's in-memory row.
+  const composeLive = (): PatchOptions[] => structuredClone([
+    ...bundlePatches,
+    ...loadOptionalPatches(NAME, profile.patchPath) ?? [],
+    ...loadOptionalPatches(NAME, homePatchPath()) ?? [],
+    ...overlays,
+  ])
+  if (ctx.get('hmr') === undefined) {
+    if (ctx.get('timer') === undefined) await ctx.loader.create({ name: '@deepseek-ai/cordis-plugin-timer' })
+    await ctx.loader.create({ name: '@deepseek-ai/cordis-plugin-hmr', config: { root: [] } })
+  }
+  await watchUserPatches(ctx, { binName: NAME, filename: profile.patchPath, compose: composeLive })
+  await watchUserPatches(ctx, { binName: NAME, filename: homePatchPath(), compose: composeLive })
 }
 
 /** A booted desktop host: the live root context and the URL its web server bound. */
@@ -196,5 +235,6 @@ export async function startDesktopHost(options: StartDesktopHostOptions): Promis
     provideCmdline(hostCtx, { args: ['--port', '0'], exit: options.onExitRequest })
   }, bareModuleBaseUrl(rootConfigPath))
   app.current = ctx
+  await watchPatchLayers(ctx, profile, bundlePatches, overlays)
   return { ctx, url: resolveUrl(ctx) }
 }
