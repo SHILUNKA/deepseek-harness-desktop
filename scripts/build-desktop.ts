@@ -201,7 +201,14 @@ extraResources:
   - from: node_modules
     to: app/node_modules
 mac:
-  target: [dmg, zip]
+  # Apple Silicon, Intel, and a universal binary carrying both. The universal
+  # slice is built from its own Electron pair rather than merged from the two
+  # single-arch outputs, so it roughly doubles both build time and file size.
+  target:
+    - target: dmg
+      arch: [arm64, x64, universal]
+    - target: zip
+      arch: [arm64, x64, universal]
   category: public.app-category.developer-tools
 win:
   target: [nsis]
