@@ -39,6 +39,22 @@ node --import tsx/esm scripts/build-desktop.ts [--platform mac|win|linux]
 
 打包必须使用 `asar: false`。`healProfilesModuleFallback` 会把已安装的包符号链接到 `~/.dsh/profiles/node_modules`，而这些链接由操作系统解析；asar 归档内部的目标不是真实文件系统路径，那样每一个链接都会失效。
 
+## 其他模型服务商
+
+服务商属于用户设置，不属于 composition：[`llm-pi-ai`](../../packages/llm/llm-pi-ai/README.md) 适配器以零 route 的休眠状态挂载，一旦设置文档描述了某个 route，它便立即注册。因此桌面应用自身不内置任何服务商清单 —— 由 Models 设置页添加，profile 写入 `settings.yaml`，密钥经 `credentials.set` 写入，因此没有任何密钥进入配置文件。
+
+多个国内服务商已存在于适配器的内置目录中，只需填写密钥；添加流程按 route id 提供它们：
+
+| 服务商 | Route id |
+|---|---|
+| 通义千问（阿里） | `qwen-token-plan-cn` |
+| 智谱 GLM | `zai-coding-cn`、`zai` |
+| 月之暗面 Kimi | `moonshotai-cn`、`kimi-coding` |
+| MiniMax | `minimax-cn`、`minimax` |
+| DeepSeek | `deepseek` |
+
+内置目录未收录的服务商在同一页面的「自定义设置」中声明，需填写显示名称、API 协议与 base URL —— 火山方舟（豆包）即属此类：协议为 `openai-completions`，base URL 为 `https://ark.cn-beijing.volces.com/api/v3`，模型 id 使用在其控制台创建的推理接入点 ID，而非公开模型名。请以服务商自身文档核对端点与模型 id；它们按服务商的节奏变更，与本仓库无关。
+
 ## Model Experience
 
 无，本包是 Web 界面之外的桌面外壳；此处没有任何内容进入模型请求。

@@ -201,14 +201,9 @@ extraResources:
   - from: node_modules
     to: app/node_modules
 mac:
-  # Apple Silicon, Intel, and a universal binary carrying both. The universal
-  # slice is built from its own Electron pair rather than merged from the two
-  # single-arch outputs, so it roughly doubles both build time and file size.
-  target:
-    - target: dmg
-      arch: [arm64, x64, universal]
-    - target: zip
-      arch: [arm64, x64, universal]
+  # Architecture comes from the command line, so each build pairs its target
+  # with a closure deployed for that same architecture.
+  target: [dmg, zip]
   category: public.app-category.developer-tools
 win:
   target: [nsis]
@@ -241,8 +236,28 @@ const { values } = parseArgs({
   options: {
     'stage-only': { type: 'boolean', default: false },
     platform: { type: 'string' },
+    arch: { type: 'string' },
   },
 })
+
+/**
+ * Deploy flags pinning which platform's optional native packages the closure
+ * receives. Without them the deploy installs for the build machine, and a
+ * cross-architecture package then carries the wrong `.node` binaries — an x64
+ * build assembled on Apple Silicon ships arm64 modules that fail at import.
+ * @param platform - the electron-builder platform name, when given.
+ * @param arch - the target CPU, when given.
+ * @returns pnpm config arguments, empty when the build targets the host.
+ */
+function architectureFlags(platform: string | undefined, arch: string | undefined): string[] {
+  if (arch === undefined) return []
+  const os = platform === 'mac' ? 'darwin' : platform === 'win' ? 'win32' : platform === 'linux' ? 'linux' : undefined
+  if (os === undefined) return []
+  return [
+    `--config.supportedArchitectures.os[]=${os}`,
+    `--config.supportedArchitectures.cpu[]=${arch}`,
+  ]
+}
 
 await rm(join(root, 'dist-desktop'), { recursive: true, force: true })
 // Only the parent: `pnpm deploy` must create the target itself. Handing it an
@@ -256,6 +271,7 @@ await run('pnpm', [
   '--config.node-linker=hoisted',
   '--config.auto-install-peers=false',
   '--config.link-workspace-packages=true',
+  ...architectureFlags(values.platform, values.arch),
   STAGING,
 ], root)
 
@@ -268,6 +284,7 @@ if (values['stage-only']) {
   console.log(`build-desktop: staged at ${STAGING}`)
 } else {
   const platform = values.platform === undefined ? [] : [`--${values.platform}`]
+  const arch = values.arch === undefined ? [] : [`--${values.arch}`]
   // The binary is invoked directly rather than through `pnpm exec`, which
   // verifies workspace dependencies before running anything and reaches the
   // same failing install. electron-builder itself lives in the workspace and is
@@ -280,6 +297,7 @@ if (values['stage-only']) {
     // treats a CI run as a release and fails demanding a GitHub token.
     '--publish', 'never',
     ...platform,
+    ...arch,
   ], root)
   console.log(`build-desktop: installers in ${OUTPUT}`)
 }

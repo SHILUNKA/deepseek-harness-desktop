@@ -21,13 +21,22 @@ jobs:
       # packaging break is exactly what this matrix exists to surface.
       fail-fast: false
       matrix:
+        # Architecture is explicit per entry: the packaging script deploys a
+        # closure for that exact target, so native modules match the binary
+        # they ship in rather than the runner that built it.
         include:
           - os: macos-latest
             platform: mac
+            arch: arm64
+          - os: macos-latest
+            platform: mac
+            arch: x64
           - os: windows-latest
             platform: win
+            arch: x64
           - os: ubuntu-latest
             platform: linux
+            arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     steps:
@@ -50,11 +59,11 @@ jobs:
       # beneath another pnpm process and would target the workspace instead of
       # the staging tree.
       - name: Package
-        run: node --import tsx/esm scripts/build-desktop.ts --platform ${{ matrix.platform }}
+        run: node --import tsx/esm scripts/build-desktop.ts --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: desktop-${{ matrix.platform }}
+          name: desktop-${{ matrix.platform }}-${{ matrix.arch }}
           if-no-files-found: error
           path: |
             dist-desktop/out/*.dmg

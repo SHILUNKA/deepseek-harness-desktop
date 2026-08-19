@@ -39,6 +39,22 @@ Run it directly, **not** through `pnpm run`: `pnpm deploy` refuses to run beneat
 
 Packaging requires `asar: false`. `healProfilesModuleFallback` symlinks installed packages into `~/.dsh/profiles/node_modules`, and the operating system resolves those links; a target inside an asar archive is not a real filesystem path, so every one of them would dangle.
 
+## Other model providers
+
+Providers are user settings, not composition: the [`llm-pi-ai`](../../packages/llm/llm-pi-ai/README.md) adapter is mounted dormant with zero routes, and a route registers the moment the settings document describes it. The desktop app therefore ships no provider list of its own — the Models settings page adds one, writing the profile to `settings.yaml` and the key through `credentials.set`, so no secret enters a configuration file.
+
+Several China-hosted providers are already in the adapter's installed catalog and only need a key; the add flow offers them by route id:
+
+| Provider | Route id |
+|---|---|
+| Qwen (Alibaba) | `qwen-token-plan-cn` |
+| Zhipu GLM | `zai-coding-cn`, `zai` |
+| Moonshot Kimi | `moonshotai-cn`, `kimi-coding` |
+| MiniMax | `minimax-cn`, `minimax` |
+| DeepSeek | `deepseek` |
+
+A provider the catalog does not ship is declared in the same page under 自定义设置, which asks for the display name, the API protocol, and the base URL — Volcengine Ark (Doubao) is one of these: protocol `openai-completions`, base URL `https://ark.cn-beijing.volces.com/api/v3`, and a model id that is the inference endpoint id created in its console rather than a public model name. Verify endpoints and model ids against the provider's own documentation; they change on the provider's schedule, not this repository's.
+
 ## Model Experience
 
 None, as the package is a desktop shell around the web surface; nothing here reaches a model request.
