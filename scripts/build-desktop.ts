@@ -161,6 +161,11 @@ async function neutralizeStagedManifest(): Promise<void> {
   // target rejects a build whose author carries no email address; the workspace
   // manifest has no reason to carry either.
   kept.author ??= 'DeepSeek AI <noreply@deepseek.com>'
+  // Debian names its artifact after the package name, so a scoped name turns
+  // the `@scope/` segment into a directory that nothing created and the build
+  // dies writing the .deb. macOS and Windows name theirs after productName and
+  // are unaffected either way.
+  kept.name = 'dsh-desktop'
   await writeFile(manifestPath, `${JSON.stringify(kept, undefined, 2)}\n`)
 }
 
