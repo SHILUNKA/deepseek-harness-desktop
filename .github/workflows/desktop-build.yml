@@ -62,3 +62,5 @@ jobs:
             dist-desktop/out/*.exe
             dist-desktop/out/*.AppImage
             dist-desktop/out/*.deb
+
+# Indexing touch: GitHub registers a workflow when a push changes its file.
