@@ -156,6 +156,7 @@ export const TRANSLATION_SCOPE_GLOB_EXCLUDES = [
   '**/.storages/**',
   '**/tmp/**',
   '**/dist-exe/**',
+  '**/dist-desktop/**',
   '**/__pycache__/**',
   '**/.pytest_cache/**',
   'apps/web/dist/**',

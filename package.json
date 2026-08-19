@@ -24,6 +24,8 @@
     "build:web": "pnpm --filter @deepseek-ai/dsh-web-frontend run build",
     "clean": "tsx scripts/clean.ts",
     "change-scope": "tsx scripts/change-scope.ts",
+    "desktop": "npm run desktop:link && pnpm --filter @deepseek-ai/dsh-desktop run start",
+    "desktop:link": "tsx scripts/link-electron-runtime.ts",
     "typecheck": "npm run build:lib:host && npm run typecheck:contracts-ready",
     "typecheck:contracts-ready": "tsc -b tsconfig.client.json",
     "lint": "npm run build:lib:host && npm run lint:contracts-ready",
