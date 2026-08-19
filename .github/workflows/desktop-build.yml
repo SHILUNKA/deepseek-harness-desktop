@@ -25,13 +25,14 @@ jobs:
         # installs optional native packages for the machine it runs on, and
         # `pnpm deploy --legacy` ignores `supportedArchitectures`, so a
         # cross-architecture build would ship the runner's binaries instead of
-        # the target's. macos-13 is the last Intel image; macos-latest is
-        # Apple Silicon.
+        # the target's. macos-15-intel is the last Intel image GitHub offers
+        # (through August 2027, after which Actions drops macOS x86_64
+        # entirely); macos-latest is Apple Silicon.
         include:
           - os: macos-latest
             platform: mac
             arch: arm64
-          - os: macos-13
+          - os: macos-15-intel
             platform: mac
             arch: x64
           - os: windows-latest

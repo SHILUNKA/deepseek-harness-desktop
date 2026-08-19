@@ -25,13 +25,21 @@ import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { existsSync, readFileSync } from 'node:fs'
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 
 const root = resolve(import.meta.dirname, '..')
 
-/** Deploy target: the packaged application's file tree. */
-const STAGING = join(root, 'dist-desktop', 'staging')
+/**
+ * Deploy target: the packaged application's file tree.
+ *
+ * Kept outside the repository. `pnpm deploy` records its own linker choice in
+ * the tree it writes, and a staging directory inside the workspace leaves every
+ * later pnpm command in the repository convinced its dependencies are out of
+ * sync — including the pre-push hooks.
+ */
+const STAGING = join(tmpdir(), 'dsh-desktop-staging')
 
 /** Installer output directory. */
 const OUTPUT = join(root, 'dist-desktop', 'out')
@@ -241,7 +249,8 @@ const { values } = parseArgs({
 })
 
 
-await rm(join(root, 'dist-desktop'), { recursive: true, force: true })
+await rm(STAGING, { recursive: true, force: true })
+await rm(OUTPUT, { recursive: true, force: true })
 // Only the parent: `pnpm deploy` must create the target itself. Handing it an
 // existing directory makes it treat the target as a modules directory to purge,
 // which needs an interactive confirmation it cannot get from a script.
