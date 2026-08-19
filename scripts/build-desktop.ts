@@ -240,24 +240,6 @@ const { values } = parseArgs({
   },
 })
 
-/**
- * Deploy flags pinning which platform's optional native packages the closure
- * receives. Without them the deploy installs for the build machine, and a
- * cross-architecture package then carries the wrong `.node` binaries — an x64
- * build assembled on Apple Silicon ships arm64 modules that fail at import.
- * @param platform - the electron-builder platform name, when given.
- * @param arch - the target CPU, when given.
- * @returns pnpm config arguments, empty when the build targets the host.
- */
-function architectureFlags(platform: string | undefined, arch: string | undefined): string[] {
-  if (arch === undefined) return []
-  const os = platform === 'mac' ? 'darwin' : platform === 'win' ? 'win32' : platform === 'linux' ? 'linux' : undefined
-  if (os === undefined) return []
-  return [
-    `--config.supportedArchitectures.os[]=${os}`,
-    `--config.supportedArchitectures.cpu[]=${arch}`,
-  ]
-}
 
 await rm(join(root, 'dist-desktop'), { recursive: true, force: true })
 // Only the parent: `pnpm deploy` must create the target itself. Handing it an
@@ -271,7 +253,6 @@ await run('pnpm', [
   '--config.node-linker=hoisted',
   '--config.auto-install-peers=false',
   '--config.link-workspace-packages=true',
-  ...architectureFlags(values.platform, values.arch),
   STAGING,
 ], root)
 

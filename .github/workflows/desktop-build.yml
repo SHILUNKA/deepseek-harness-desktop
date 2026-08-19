@@ -21,14 +21,17 @@ jobs:
       # packaging break is exactly what this matrix exists to surface.
       fail-fast: false
       matrix:
-        # Architecture is explicit per entry: the packaging script deploys a
-        # closure for that exact target, so native modules match the binary
-        # they ship in rather than the runner that built it.
+        # Each architecture builds on a runner of that architecture. pnpm
+        # installs optional native packages for the machine it runs on, and
+        # `pnpm deploy --legacy` ignores `supportedArchitectures`, so a
+        # cross-architecture build would ship the runner's binaries instead of
+        # the target's. macos-13 is the last Intel image; macos-latest is
+        # Apple Silicon.
         include:
           - os: macos-latest
             platform: mac
             arch: arm64
-          - os: macos-latest
+          - os: macos-13
             platform: mac
             arch: x64
           - os: windows-latest
