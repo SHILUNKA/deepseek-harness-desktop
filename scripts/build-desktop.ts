@@ -157,9 +157,10 @@ async function neutralizeStagedManifest(): Promise<void> {
     scripts: _scripts,
     ...kept
   } = JSON.parse(await readFile(manifestPath, 'utf8')) as Record<string, unknown>
-  // electron-builder writes this into the bundle metadata and warns when it is
-  // absent; the workspace manifest has no reason to carry it.
-  kept.author ??= 'DeepSeek AI'
+  // electron-builder writes this into the bundle metadata, and the Linux deb
+  // target rejects a build whose author carries no email address; the workspace
+  // manifest has no reason to carry either.
+  kept.author ??= 'DeepSeek AI <noreply@deepseek.com>'
   await writeFile(manifestPath, `${JSON.stringify(kept, undefined, 2)}\n`)
 }
 
@@ -263,6 +264,9 @@ if (values['stage-only']) {
   await run(builderBin, [
     '--projectDir', STAGING,
     '--config', join(STAGING, 'electron-builder.yml'),
+    // This script only ever produces local artifacts. Without it, electron-builder
+    // treats a CI run as a release and fails demanding a GitHub token.
+    '--publish', 'never',
     ...platform,
   ], root)
   console.log(`build-desktop: installers in ${OUTPUT}`)
