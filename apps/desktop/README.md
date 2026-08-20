@@ -43,7 +43,7 @@ Packaging requires `asar: false`. `healProfilesModuleFallback` symlinks installe
 
 Providers are user settings, not composition: the [`llm-pi-ai`](../../packages/llm/llm-pi-ai/README.md) adapter is mounted dormant with zero routes, and a route registers the moment the settings document describes it. The desktop app therefore ships no provider list of its own — the Models settings page adds one, writing the profile to `settings.yaml` and the key through `credentials.set`, so no secret enters a configuration file.
 
-Several China-hosted providers are already in the adapter's installed catalog and only need a key; the add flow offers them by route id:
+Several China-hosted providers are already in the adapter's installed catalog and only need a key. The add flow lists them by name; the route id each one carries is what settings, logs, and the failover order address it by:
 
 | Provider | Route id |
 |---|---|
@@ -54,6 +54,18 @@ Several China-hosted providers are already in the adapter's installed catalog an
 | DeepSeek | `deepseek` |
 
 A provider the catalog does not ship is declared in the same page under 自定义设置, which asks for the display name, the API protocol, and the base URL — Volcengine Ark (Doubao) is one of these: protocol `openai-completions`, base URL `https://ark.cn-beijing.volces.com/api/v3`, and a model id that is the inference endpoint id created in its console rather than a public model name. Verify endpoints and model ids against the provider's own documentation; they change on the provider's schedule, not this repository's.
+
+## Spreading work across several accounts
+
+Several of the providers above hand out a free daily or monthly allowance, and one allowance rarely covers a day's work. The [`llm-failover`](../../packages/llm/llm-failover/README.md) plugin is composed here for that: when a provider reports an exhausted quota, the request is served by the next one on a list instead of failing, and the exhausted route is skipped for an hour before being preferred again.
+
+The list is empty until someone fills it in, under **Settings → Plugins → Provider failover**, as comma-separated `provider/model` pairs. A provider no key is configured for is skipped rather than tried, so the list may name more providers than any one person has signed up for. A *rejected* key is not skipped — that is a configuration mistake, and it fails loudly rather than being quietly worked around.
+
+## MCP servers
+
+External [MCP](https://modelcontextprotocol.io/) tool servers are added under **Settings → Plugins → MCP servers**, one per line as `name: command arguments`. The [`mcp-servers`](../../packages/mcp/mcp-servers/README.md) plugin mounts and unmounts them as the list changes, so a server is gained or lost without restarting the app and without editing a configuration file. A line starting with `#` keeps a server without running it.
+
+Only stdio servers are configurable this way. An HTTP MCP server, or one needing environment variables or a working directory, still needs a composed [`mcp-client`](../../packages/mcp/mcp-client/README.md) row in a `cordis.patch.yml`.
 
 ## Model Experience
 

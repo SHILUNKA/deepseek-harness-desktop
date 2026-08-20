@@ -72,6 +72,22 @@
     - id: llm-retry
       name: '@deepseek-ai/dsh-llm-retry'
 
+    # Mounted after llm-retry so it sits inside retry on the recovery
+    # waterfall: retry owns "the same provider, a moment later" and this owns
+    # "a different provider" for what retry declines. The order is empty here
+    # and filled in from Settings — which providers a person holds is theirs,
+    # and a model id shipped as a default would go stale on the provider's
+    # schedule, not this repository's.
+    - id: llm-failover
+      name: '@deepseek-ai/dsh-llm-failover'
+
+    # Mounts one mcp-client per entry in the `mcp-servers` settings section, so
+    # a person gains or loses an MCP server from Settings instead of writing a
+    # plugin row into a patch file. Servers a deployment ships stay composed as
+    # their own rows and are unaffected.
+    - id: mcp-servers
+      name: '@deepseek-ai/dsh-mcp-servers'
+
     # User-settings document (`$DSH_HOME/settings.yaml`, hot-reloaded): a
     # `llm-deepseek:` or `llm-pi-ai:` section there overrides the adapter entries
     # below without a restart, and is what the web Models page writes.

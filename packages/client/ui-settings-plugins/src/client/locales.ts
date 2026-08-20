@@ -8,6 +8,10 @@ export type PluginsSettingsLocaleKey =
   | 'bashTitle' | 'bashDescription' | 'bashTimeoutMs' | 'bashTimeoutMsHint'
   | 'bashMaxOutputBytes' | 'bashMaxOutputBytesHint'
   | 'agentLoopTitle' | 'agentLoopDescription' | 'agentLoopMaxParallel' | 'agentLoopMaxParallelHint'
+  | 'failoverTitle' | 'failoverDescription' | 'failoverOrder' | 'failoverOrderHint'
+  | 'failoverOrderInvalid' | 'failoverCooldown' | 'failoverCooldownHint'
+  | 'failoverQuotaCooldown' | 'failoverQuotaCooldownHint'
+  | 'mcpTitle' | 'mcpDescription' | 'mcpServers' | 'mcpServersHint' | 'mcpServersInvalid'
   | 'webSearchTitle' | 'webSearchDescription'
   | 'webSearchApiKey' | 'webSearchApiKeyHint' | 'webSearchApiKeySet' | 'webSearchApiKeyUnset'
   | 'webSearchBaseUrl' | 'webSearchBaseUrlHint' | 'webSearchMaxUses' | 'webSearchMaxUsesHint'
@@ -41,6 +45,20 @@ export const en: Record<PluginsSettingsLocaleKey, string> = {
   agentLoopDescription: 'How the agent dispatches tool calls.',
   agentLoopMaxParallel: 'Parallel tool calls',
   agentLoopMaxParallelHint: 'Upper bound on parallel-safe calls running at once within one step.',
+  failoverTitle: 'Provider failover',
+  failoverDescription: 'Which provider takes over when the one in use cannot serve a request.',
+  failoverOrder: 'Fallthrough order',
+  failoverOrderHint: 'Comma-separated provider/model pairs, tried in order. A provider you hold no key for is skipped. Empty means never change provider.',
+  failoverOrderInvalid: 'Each entry must be provider/model, separated by commas.',
+  failoverQuotaCooldown: 'Cooldown after exhausted quota (ms)',
+  failoverQuotaCooldownHint: 'How long a provider is skipped once it reports no balance left. Default 3600000 (one hour).',
+  failoverCooldown: 'Cooldown after other failures (ms)',
+  failoverCooldownHint: 'How long a provider is skipped after rate limiting or an outage. Default 300000 (five minutes).',
+  mcpTitle: 'MCP servers',
+  mcpDescription: 'External tool servers this installation runs.',
+  mcpServers: 'Servers',
+  mcpServersHint: 'One per line, as name: command arguments. Quote an argument containing spaces. Start a line with # to keep a server without running it. Changes apply without a restart.',
+  mcpServersInvalid: 'Each line must be name: command, where the name is 1-32 characters of letters, digits, hyphen, or underscore, and is not repeated.',
   webSearchTitle: 'Web search',
   webSearchDescription: 'The DeepSeek search provider.',
   webSearchApiKey: 'API key',
@@ -82,6 +100,20 @@ export const zh: Record<PluginsSettingsLocaleKey, string> = {
   agentLoopDescription: 'Agent 如何派发工具调用。',
   agentLoopMaxParallel: '并行工具调用数',
   agentLoopMaxParallelHint: '同一步内最多同时运行多少个可并行的调用。',
+  failoverTitle: '提供方故障转移',
+  failoverDescription: '当前提供方无法服务请求时，由谁接手。',
+  failoverOrder: '回退顺序',
+  failoverOrderHint: '以逗号分隔的 提供方/模型 组合，按顺序尝试。没有配置密钥的提供方会被跳过。留空表示从不切换提供方。',
+  failoverOrderInvalid: '每一项都必须是 提供方/模型，并以逗号分隔。',
+  failoverQuotaCooldown: '额度耗尽后的冷却时长（毫秒）',
+  failoverQuotaCooldownHint: '某个提供方报告余额用尽后，跳过它多久。默认 3600000（一小时）。',
+  failoverCooldown: '其他失败后的冷却时长（毫秒）',
+  failoverCooldownHint: '某个提供方被限流或发生故障后，跳过它多久。默认 300000（五分钟）。',
+  mcpTitle: 'MCP 服务器',
+  mcpDescription: '本机运行的外部工具服务器。',
+  mcpServers: '服务器',
+  mcpServersHint: '每行一个，格式为 名称: 命令 参数。含空格的参数请用引号括起。行首加 # 可保留但不运行。改动无需重启即刻生效。',
+  mcpServersInvalid: '每行都必须是 名称: 命令；名称为 1-32 位的字母、数字、连字符或下划线，且不能重复。',
   webSearchTitle: '网页搜索',
   webSearchDescription: 'DeepSeek 搜索提供方。',
   webSearchApiKey: 'API Key',

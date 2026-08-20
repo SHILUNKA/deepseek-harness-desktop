@@ -55,6 +55,18 @@ node --import tsx/esm scripts/build-desktop.ts [--platform mac|win|linux]
 
 内置目录未收录的服务商在同一页面的「自定义设置」中声明，需填写显示名称、API 协议与 base URL —— 火山方舟（豆包）即属此类：协议为 `openai-completions`，base URL 为 `https://ark.cn-beijing.volces.com/api/v3`，模型 id 使用在其控制台创建的推理接入点 ID，而非公开模型名。请以服务商自身文档核对端点与模型 id；它们按服务商的节奏变更，与本仓库无关。
 
+## 把工作分散到多个账号
+
+上面若干服务商都提供每日或每月的免费额度，而单个额度往往撑不满一天的工作。[`llm-failover`](../../packages/llm/llm-failover/README.md) 插件正为此组合在这里：当某个服务商报告额度耗尽时，请求交由列表中的下一个来服务，而不是直接失败；耗尽的那个路由会被跳过一小时，之后重新成为首选。
+
+列表在有人填写之前是空的，填写位置为**设置 → 插件 → 提供方故障转移**，格式是以逗号分隔的 `提供方/模型` 组合。没有配置密钥的服务商会被跳过而非尝试，因此列表里可以写上比任何单个用户实际注册的更多的服务商。而被*拒绝*的密钥不会被跳过 —— 那是配置错误，它会响亮地失败，而不是被悄悄绕开。
+
+## MCP 服务器
+
+外部 [MCP](https://modelcontextprotocol.io/) 工具服务器在**设置 → 插件 → MCP 服务器**中添加，每行一个，格式为 `名称: 命令 参数`。[`mcp-servers`](../../packages/mcp/mcp-servers/README.md) 插件会随列表变化挂载与卸载它们，因此增删一个服务器既不需要重启应用，也不需要编辑配置文件。行首加 `#` 可保留某个服务器而不运行它。
+
+只有 stdio 型服务器能以这种方式配置。HTTP 型的 MCP 服务器，或需要环境变量、工作目录的服务器，仍然需要在 `cordis.patch.yml` 中组合一行 [`mcp-client`](../../packages/mcp/mcp-client/README.md)。
+
 ## Model Experience
 
 无，本包是 Web 界面之外的桌面外壳；此处没有任何内容进入模型请求。
