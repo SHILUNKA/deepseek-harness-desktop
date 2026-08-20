@@ -33,6 +33,7 @@ import {
 import { apiKeyFailure } from './apiKey.ts'
 import { EditorFooter } from './EditorFooter.tsx'
 import { ModelListEditor } from './ModelListEditor.tsx'
+import { resolveProviderConsole } from './provider-catalog.ts'
 import { deriveKeyRef, messageOf, protocolChoices } from './store.ts'
 import type { en } from './locales.ts'
 import styles from './ModelsSection.module.css'
@@ -346,6 +347,7 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
       : keyState?.configured === true && props.credentialRequired !== true
         ? t('keyStored')
         : family === 'pi-ai' ? t('keyPlaceholderNative') : t('keyPlaceholder')
+    const keyConsole = resolveProviderConsole(props.provider)
     /** What both family editors take: the rows, whose layer owns them, and the two writes. */
     const catalogProps = {
       models,
@@ -375,6 +377,19 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
             onChange={(event) => { setKeyDraft(event.target.value) }}
           />
           {shownKeyFailure === undefined ? null : <p className={styles['error']}>{t(shownKeyFailure)}</p>}
+          {/* A named route still leaves a person nowhere to go for the key the
+              field is asking for. Opens in their own browser: the desktop shell
+              routes every external target through the OS. */}
+          {keyConsole === undefined ? null : (
+            <a
+              className={styles['keyLink']}
+              href={keyConsole}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              {t('keyConsole')}
+            </a>
+          )}
         </div>
         {props.credentialOnly === true ? null : <details className={styles['customized']}>
           <summary className={styles['customizedSummary']}>{t('customized')}</summary>

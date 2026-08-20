@@ -21,10 +21,10 @@
   - paragraph: 填入各提供方的 API 密钥即可使用其模型。
   - list:
     - listitem:
-      - text: minimax-cn
+      - text: MiniMax（国内）
       - img "API 密钥已配置"
-      - button "编辑 minimax-cn": 编辑
-      - button "删除 minimax-cn": 删除
+      - button "编辑 MiniMax（国内） (minimax-cn)": 编辑
+      - button "删除 MiniMax（国内） (minimax-cn)": 删除
     - listitem:
       - text: Acme Gateway 自定义
       - button "编辑 Acme Gateway (acme-gateway)": 编辑

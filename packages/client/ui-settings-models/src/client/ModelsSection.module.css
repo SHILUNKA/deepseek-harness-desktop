@@ -673,3 +673,19 @@ select.input {
   font-size: 13px;
   overflow-wrap: anywhere;
 }
+
+/* The provider's own console, offered under the key field. Shaped like
+   .linkButton so this page's inline actions read alike, but it is an anchor:
+   the target is another site, not an action on this one. */
+.keyLink {
+  align-self: flex-start;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+  text-decoration: none;
+}
+
+.keyLink:hover {
+  color: var(--dsw-alias-label-secondary);
+  text-decoration: underline;
+}
