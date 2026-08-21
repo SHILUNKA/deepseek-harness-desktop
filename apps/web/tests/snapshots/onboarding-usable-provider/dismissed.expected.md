@@ -65,6 +65,7 @@
   - text: API 密钥
   - textbox "API 密钥":
     - /placeholder: 输入 API 密钥，或留空使用环境认证
+  - button "从剪贴板填入"
   - link "获取 API Key ↗":
     - /url: https://platform.minimaxi.com
   - group: 自定义设置

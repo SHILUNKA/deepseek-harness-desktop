@@ -147,6 +147,10 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
   const { namespace, settingsPath, api, t } = props
   const [draft, setDraft] = useState<Record<string, unknown>>(() => draftAt(namespace, settingsPath))
   const [keyDraft, setKeyDraft] = useState('')
+  /** Why the last clipboard read produced nothing, so the button can say so. */
+  const [clipboardFailure, setClipboardFailure] = useState<
+    'keyClipboardEmpty' | 'keyClipboardBlocked' | undefined
+  >(undefined)
   const [keyState, setKeyState] = useState<CredentialView | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [failure, setFailure] = useState<string | undefined>(undefined)
@@ -216,6 +220,34 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
     ? 'keyRequired' as const
     : undefined
   const shownKeyFailure = credentialRequiredFailure ?? keyFailure
+  /**
+   * Fill the field from the clipboard.
+   *
+   * A key is created on the provider's site and copied there, so the last step
+   * of getting one is always a paste — and the keyboard is exactly what a
+   * person coming back from a browser has the most trouble with. Reads on the
+   * click, never in the background: this is the one moment the person asked
+   * for it.
+   */
+  const pasteKeyFromClipboard = async (): Promise<void> => {
+    try {
+      const text = await navigator.clipboard.readText()
+      const trimmed = text.trim()
+      if (trimmed === '') {
+        setClipboardFailure('keyClipboardEmpty')
+        return
+      }
+      setClipboardFailure(undefined)
+      setKeyDraft(trimmed)
+    } catch {
+      // Denied, empty, or unavailable — the reason is not one a person can act
+      // on differently, and the keyboard still works.
+      setClipboardFailure('keyClipboardBlocked')
+    }
+  }
+  /** Whether the browser offers clipboard reads at all; a dead button helps nobody. */
+  const clipboardReadable = typeof navigator !== 'undefined'
+    && (navigator.clipboard as Clipboard | undefined) !== undefined
   // What the form currently shows, which is what an interrogation must ask:
   // an edited-but-unsaved endpoint, and a key typed but not yet stored.
   const probeApi = stringAt(draft, 'api') ?? stringAt(fallback, 'api')
@@ -374,22 +406,43 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
             required={props.credentialRequired === true}
             autoFocus={props.autoFocusCredential === true}
             disabled={disabled || keyLocked}
-            onChange={(event) => { setKeyDraft(event.target.value) }}
+            onChange={(event) => {
+              setClipboardFailure(undefined)
+              setKeyDraft(event.target.value)
+            }}
           />
-          {shownKeyFailure === undefined ? null : <p className={styles['error']}>{t(shownKeyFailure)}</p>}
-          {/* A named route still leaves a person nowhere to go for the key the
-              field is asking for. Opens in their own browser: the desktop shell
-              routes every external target through the OS. */}
-          {keyConsole === undefined ? null : (
-            <a
-              className={styles['keyLink']}
-              href={keyConsole}
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              {t('keyConsole')}
-            </a>
-          )}
+          {shownKeyFailure !== undefined
+            ? <p className={styles['error']}>{t(shownKeyFailure)}</p>
+            : clipboardFailure !== undefined
+              ? <p className={styles['error']}>{t(clipboardFailure)}</p>
+              : null}
+          <div className={styles['keyActions']}>
+            {clipboardReadable
+              ? (
+                <button
+                  type="button"
+                  className={styles['keyLinkButton']}
+                  disabled={disabled || keyLocked}
+                  onClick={() => { void pasteKeyFromClipboard() }}
+                >
+                  {t('keyClipboard')}
+                </button>
+              )
+              : null}
+            {/* A named route still leaves a person nowhere to go for the key the
+                field is asking for. Opens in their own browser: the desktop shell
+                routes every external target through the OS. */}
+            {keyConsole === undefined ? null : (
+              <a
+                className={styles['keyLink']}
+                href={keyConsole}
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                {t('keyConsole')}
+              </a>
+            )}
+          </div>
         </div>
         {props.credentialOnly === true ? null : <details className={styles['customized']}>
           <summary className={styles['customizedSummary']}>{t('customized')}</summary>

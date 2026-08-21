@@ -32,9 +32,11 @@ describe('catalog provider names', () => {
 
 describe('key-issuing consoles', () => {
   // Verified reachable when the table was written; each is a provider's own
-  // console root, which is the claim this table makes.
+  // console root, which is the claim this table makes — except `deepseek`,
+  // which lands on the key page because the provider's own API documentation
+  // links there.
   const CONSOLES: readonly (readonly [string, string])[] = [
-    ['deepseek', 'https://platform.deepseek.com'],
+    ['deepseek', 'https://platform.deepseek.com/api_keys'],
     ['zai', 'https://z.ai'],
     ['zai-coding-cn', 'https://bigmodel.cn'],
     ['minimax', 'https://www.minimax.io'],

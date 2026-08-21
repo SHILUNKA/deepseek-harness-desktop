@@ -98,6 +98,9 @@ export const en = {
   onboardingSaving: 'Saving…',
   keyRequired: 'Enter an API key to continue.',
   keyConsole: 'Get an API key ↗',
+  keyClipboard: 'Paste from clipboard',
+  keyClipboardEmpty: 'The clipboard holds no text to paste.',
+  keyClipboardBlocked: 'The clipboard could not be read. Paste with the keyboard instead.',
   // Catalog display names. pi-ai's directory answers a route id and nothing
   // else, so a shipped provider would otherwise reach the page as the bare
   // `zai-coding-cn` a person cannot map onto a brand. Only routes named here
@@ -219,6 +222,9 @@ export const zh: { [Key in keyof typeof en]: string } = {
   onboardingSaving: '保存中…',
   keyRequired: '请输入 API 密钥后继续。',
   keyConsole: '获取 API Key ↗',
+  keyClipboard: '从剪贴板填入',
+  keyClipboardEmpty: '剪贴板里没有可填入的文本。',
+  keyClipboardBlocked: '无法读取剪贴板，请改用键盘粘贴。',
   providerDeepseek: 'DeepSeek 深度求索',
   providerAntLing: '蚂蚁百灵',
   providerZai: '智谱 Z.ai（国际）',

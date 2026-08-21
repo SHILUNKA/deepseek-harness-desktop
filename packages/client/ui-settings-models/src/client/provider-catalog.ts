@@ -59,15 +59,18 @@ export function resolveProviderName(
  * requests while `platform.moonshot.cn` hands out the credential — so the page
  * carries its own table.
  *
- * Each entry is a provider's own console root rather than a deep link into its
- * key page: a console reorganizes its paths on its own schedule, and a link
- * that 404s is worse than one more click. Routes whose console could not be
- * confirmed are absent, and absence simply renders no link. Deliberately
- * carries no free-tier amounts: those change on the provider's schedule, and a
- * stale promise in the UI is worse than none.
+ * Entries are console roots rather than deep links into a key page, because a
+ * console reorganizes its paths on its own schedule and a link that 404s is
+ * worse than one more click. The exception is a path the provider's own API
+ * documentation links to, which is as stable as anything they publish —
+ * `deepseek` is one, so it lands on the key page directly.
+ *
+ * Routes whose console could not be confirmed are absent, and absence simply
+ * renders no link. Deliberately carries no free-tier amounts: those change on
+ * the provider's schedule, and a stale promise in the UI is worse than none.
  */
 const CATALOG_CONSOLES: Readonly<Record<string, string>> = {
-  'deepseek': 'https://platform.deepseek.com',
+  'deepseek': 'https://platform.deepseek.com/api_keys',
   'zai': 'https://z.ai',
   'zai-coding-cn': 'https://bigmodel.cn',
   'minimax': 'https://www.minimax.io',
