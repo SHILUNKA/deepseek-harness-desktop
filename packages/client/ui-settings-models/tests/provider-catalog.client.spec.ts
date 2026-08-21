@@ -38,12 +38,12 @@ describe('key-issuing consoles', () => {
   const CONSOLES: readonly (readonly [string, string])[] = [
     ['deepseek', 'https://platform.deepseek.com/api_keys'],
     ['zai', 'https://z.ai'],
-    ['zai-coding-cn', 'https://bigmodel.cn'],
+    ['zai-coding-cn', 'https://bigmodel.cn/apikey/platform'],
     ['minimax', 'https://www.minimax.io'],
     ['minimax-cn', 'https://platform.minimaxi.com'],
-    ['moonshotai', 'https://platform.moonshot.ai'],
-    ['moonshotai-cn', 'https://platform.moonshot.cn'],
-    ['kimi-coding', 'https://platform.moonshot.cn'],
+    ['moonshotai', 'https://platform.kimi.ai/console/api-keys'],
+    ['moonshotai-cn', 'https://platform.kimi.com/console/api-keys'],
+    ['kimi-coding', 'https://platform.kimi.com/console/api-keys'],
     ['qwen-token-plan-cn', 'https://bailian.console.aliyun.com'],
     ['xiaomi', 'https://platform.xiaomimimo.com'],
     ['xiaomi-token-plan-cn', 'https://platform.xiaomimimo.com'],
@@ -53,6 +53,13 @@ describe('key-issuing consoles', () => {
 
   it.each(CONSOLES)('sends %s to its own console', (provider, url) => {
     expect(resolveProviderConsole(provider)).toBe(url)
+  })
+
+  it('keeps the China and international routes of one brand on their own sites', () => {
+    // The accounts are separate; a key from one does not work on the other, so
+    // sending a person to the wrong console shows them the wrong key page.
+    expect(resolveProviderConsole('moonshotai-cn')).toContain('kimi.com')
+    expect(resolveProviderConsole('moonshotai')).toContain('kimi.ai')
   })
 
   it('offers no console for a route the table does not cover', () => {

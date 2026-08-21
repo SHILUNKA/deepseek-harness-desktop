@@ -59,11 +59,15 @@ export function resolveProviderName(
  * requests while `platform.moonshot.cn` hands out the credential — so the page
  * carries its own table.
  *
- * Entries are console roots rather than deep links into a key page, because a
- * console reorganizes its paths on its own schedule and a link that 404s is
- * worse than one more click. The exception is a path the provider's own API
- * documentation links to, which is as stable as anything they publish —
- * `deepseek` is one, so it lands on the key page directly.
+ * An entry is the key page itself where that path is known to be the provider's
+ * own published one, and the console root otherwise: a console reorganizes its
+ * paths on its own schedule, and a link that 404s is worse than one more click.
+ *
+ * Kimi's two routes deliberately point at different sites. `platform.moonshot.cn`
+ * redirects to `platform.kimi.com` and `platform.moonshot.ai` to
+ * `platform.kimi.ai`, so the China and international routes each land on the
+ * console that holds their own account — sending one to the other's site would
+ * show a person a key page their key does not come from.
  *
  * Routes whose console could not be confirmed are absent, and absence simply
  * renders no link. Deliberately carries no free-tier amounts: those change on
@@ -72,12 +76,13 @@ export function resolveProviderName(
 const CATALOG_CONSOLES: Readonly<Record<string, string>> = {
   'deepseek': 'https://platform.deepseek.com/api_keys',
   'zai': 'https://z.ai',
-  'zai-coding-cn': 'https://bigmodel.cn',
+  'zai-coding-cn': 'https://bigmodel.cn/apikey/platform',
   'minimax': 'https://www.minimax.io',
   'minimax-cn': 'https://platform.minimaxi.com',
-  'moonshotai': 'https://platform.moonshot.ai',
-  'moonshotai-cn': 'https://platform.moonshot.cn',
-  'kimi-coding': 'https://platform.moonshot.cn',
+  'moonshotai': 'https://platform.kimi.ai/console/api-keys',
+  'moonshotai-cn': 'https://platform.kimi.com/console/api-keys',
+  // Serves `api.kimi.com/coding`, so its account lives on the .com side.
+  'kimi-coding': 'https://platform.kimi.com/console/api-keys',
   'qwen-token-plan-cn': 'https://bailian.console.aliyun.com',
   'xiaomi': 'https://platform.xiaomimimo.com',
   'xiaomi-token-plan-cn': 'https://platform.xiaomimimo.com',
