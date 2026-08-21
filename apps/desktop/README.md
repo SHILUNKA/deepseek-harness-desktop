@@ -80,4 +80,5 @@ None; this package neither assembles nor sends a provider request.
 - **Profile-local plugins do not load** — plugins a person installs with `dsh plugin add` live in the profile's own `node_modules`, which only the Loader's native helper can resolve as a base. That helper cannot work in Electron, so only plugins shipped with the installation are available here. The CLI is unaffected.
 - **No code signing or notarization** — installers are unsigned, so macOS Gatekeeper and Windows SmartScreen will warn. Signing identities belong to a release pipeline, not to this script.
 - **No auto-update** — updating means installing a new build.
+- **Patch layers are not watched in a packaged build** — the HMR service needs `--expose-internals`, which a double-clicked app cannot be given, so an edit to a `cordis.patch.yml` needs a relaunch there. A source-tree run watches them. Settings-driven configuration (providers, MCP servers, plugin sections) applies immediately either way.
 - **Startup mounts the whole tree before the window becomes usable**, so first paint waits on the profile boot rather than showing partial UI.

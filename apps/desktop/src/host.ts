@@ -112,6 +112,12 @@ function resolveTelemetryPatch(disabledEnv: string | undefined, hasRow: boolean)
  * The web bundle disables the shared module-reload `hmr` row, so a watch-only
  * HMR instance with no module roots is mounted here; it needs the timer service,
  * which a composition may also leave out.
+ *
+ * Watching is best-effort. A packaged Electron main process runs without
+ * `--expose-internals`, which the HMR service requires and a double-clicked app
+ * cannot be given, so the mount fails there. Booting is not optional and
+ * watching is, so a failure degrades to "an edit needs a relaunch" instead of
+ * refusing to start the host.
  * @param ctx - the booted root context.
  * @param profile - the loaded profile, for its own patch path.
  * @param bundlePatches - the bundle layers, recomposed below the user layers.
@@ -132,12 +138,19 @@ async function watchPatchLayers(
     ...loadOptionalPatches(NAME, homePatchPath()) ?? [],
     ...overlays,
   ])
-  if (ctx.get('hmr') === undefined) {
-    if (ctx.get('timer') === undefined) await ctx.loader.create({ name: '@deepseek-ai/cordis-plugin-timer' })
-    await ctx.loader.create({ name: '@deepseek-ai/cordis-plugin-hmr', config: { root: [] } })
+  try {
+    if (ctx.get('hmr') === undefined) {
+      if (ctx.get('timer') === undefined) await ctx.loader.create({ name: '@deepseek-ai/cordis-plugin-timer' })
+      await ctx.loader.create({ name: '@deepseek-ai/cordis-plugin-hmr', config: { root: [] } })
+    }
+    await watchUserPatches(ctx, { binName: NAME, filename: profile.patchPath, compose: composeLive })
+    await watchUserPatches(ctx, { binName: NAME, filename: homePatchPath(), compose: composeLive })
+  } catch (error: unknown) {
+    // Not narrowed to the HMR case on purpose: whatever stopped the watch, the
+    // app is still usable without it, and the reason belongs in the log rather
+    // than in a startup dialog the person cannot act on.
+    ctx.logger.warn('dsh-desktop: patch layers are not being watched; an edit to a cordis.patch.yml needs a relaunch: %o', error)
   }
-  await watchUserPatches(ctx, { binName: NAME, filename: profile.patchPath, compose: composeLive })
-  await watchUserPatches(ctx, { binName: NAME, filename: homePatchPath(), compose: composeLive })
 }
 
 /** A booted desktop host: the live root context and the URL its web server bound. */

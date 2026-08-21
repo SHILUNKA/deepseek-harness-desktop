@@ -80,4 +80,5 @@ node --import tsx/esm scripts/build-desktop.ts [--platform mac|win|linux]
 - **profile 本地插件无法加载** —— 用户通过 `dsh plugin add` 安装的插件位于 profile 自己的 `node_modules` 中，只有 Loader 的原生辅助模块才能把该位置作为解析基准。该模块在 Electron 中无法工作，因此这里只能使用随安装发布的插件。CLI 不受影响。
 - **无代码签名与公证** —— 安装包未签名，macOS Gatekeeper 与 Windows SmartScreen 会告警。签名身份属于发布流水线，不属于本脚本。
 - **无自动更新** —— 更新意味着安装新构建。
+- **打包版不监听补丁层** —— HMR 服务需要 `--expose-internals`，而双击启动的应用无法获得该参数，因此在打包版中编辑 `cordis.patch.yml` 需要重新启动。从源码运行则会监听。由设置驱动的配置（提供方、MCP 服务器、插件区段）在两种情形下都即刻生效。
 - **启动时会先挂载整棵插件树，窗口才可用**，因此首屏要等待 profile 启动完成，而不是先显示部分 UI。
