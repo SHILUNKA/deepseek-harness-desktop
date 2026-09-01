@@ -59,6 +59,13 @@ jobs:
       - name: Build workspace
         run: pnpm run build
 
+      # `pnpm run build` compiles apps/desktop to lib/types/ but does not bundle
+      # its Electron main process, and package.json `main` points at lib/main.js.
+      # Without this step the packager finds no entry file and every platform
+      # fails at the very end of its build.
+      - name: Bundle the desktop main process
+        run: pnpm --filter @deepseek-ai/dsh-desktop exec tsdown
+
       # Invoked directly, never through `pnpm run`: `pnpm deploy` refuses to run
       # beneath another pnpm process and would target the workspace instead of
       # the staging tree.

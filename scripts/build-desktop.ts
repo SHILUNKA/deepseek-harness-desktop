@@ -248,6 +248,20 @@ const { values } = parseArgs({
   },
 })
 
+// The bundled main process is a separate build step from `pnpm run build`,
+// which only compiles to lib/types/. Checked up front rather than left to
+// electron-builder, whose "Application entry file does not exist" arrives only
+// after a full deploy and platform build, and names no way to fix it.
+const desktopEntry = join(root, 'apps', 'desktop', 'lib', 'main.js')
+if (!existsSync(desktopEntry)) {
+  console.error(
+    `build-desktop: ${desktopEntry} is missing — the Electron main process has not been bundled.\n`
+    + '  Bundle it first:\n'
+    + '    pnpm --filter @deepseek-ai/dsh-desktop exec tsdown',
+  )
+  process.exit(1)
+}
+
 
 await rm(STAGING, { recursive: true, force: true })
 await rm(OUTPUT, { recursive: true, force: true })
