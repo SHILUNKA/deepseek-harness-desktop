@@ -32,15 +32,33 @@ function assets(...names: string[]): ReleaseAsset[] {
   }))
 }
 
-/** Every asset of the published release, verbatim. */
+/**
+ * Assets as `artifactName` in scripts/build-desktop.ts now names them: every
+ * installer carries its architecture.
+ */
 const RELEASE_ASSETS = assets(
-  'DeepSeek-Harness-0.1.0-rc.7-linux-x86_64.AppImage',
-  'DeepSeek-Harness-0.1.0-rc.7-macOS-arm64.dmg',
-  'DeepSeek-Harness-0.1.0-rc.7-macOS-arm64.zip',
-  'DeepSeek-Harness-0.1.0-rc.7-macOS-x64.dmg',
-  'DeepSeek-Harness-0.1.0-rc.7-macOS-x64.zip',
-  'DeepSeek-Harness-Setup-0.1.0-rc.7-win-x64.exe',
-  'dsh-desktop_0.1.0-rc.7_amd64.deb',
+  'dsh-desktop-0.1.3-linux-x64.AppImage',
+  'dsh-desktop-0.1.3-linux-x64.deb',
+  'dsh-desktop-0.1.3-mac-arm64.dmg',
+  'dsh-desktop-0.1.3-mac-arm64.zip',
+  'dsh-desktop-0.1.3-mac-x64.dmg',
+  'dsh-desktop-0.1.3-mac-x64.zip',
+  'dsh-desktop-0.1.3-win-x64.exe',
+)
+
+/**
+ * What electron-builder produced for 0.1.2 before `artifactName` was set —
+ * verbatim, from that release. Kept as a test subject because it is the reason
+ * the setting exists: three of these name no architecture at all.
+ */
+const DEFAULT_NAMED_ASSETS = assets(
+  'DeepSeek.Harness-0.1.2-arm64-mac.zip',
+  'DeepSeek.Harness-0.1.2-arm64.dmg',
+  'DeepSeek.Harness-0.1.2-mac.zip',
+  'DeepSeek.Harness-0.1.2.AppImage',
+  'DeepSeek.Harness-0.1.2.dmg',
+  'DeepSeek.Harness.Setup.0.1.2.exe',
+  'dsh-desktop_0.1.2_amd64.deb',
 )
 
 describe('version precedence', () => {
@@ -73,10 +91,8 @@ describe('choosing the installer for this machine', () => {
   it('separates the two macOS architectures', () => {
     // An Apple Silicon machine must never be handed the Intel build, and the
     // two names differ only in that one token.
-    expect(selectAsset(RELEASE_ASSETS, 'darwin', 'arm64')?.name)
-      .toBe('DeepSeek-Harness-0.1.0-rc.7-macOS-arm64.dmg')
-    expect(selectAsset(RELEASE_ASSETS, 'darwin', 'x64')?.name)
-      .toBe('DeepSeek-Harness-0.1.0-rc.7-macOS-x64.dmg')
+    expect(selectAsset(RELEASE_ASSETS, 'darwin', 'arm64')?.name).toBe('dsh-desktop-0.1.3-mac-arm64.dmg')
+    expect(selectAsset(RELEASE_ASSETS, 'darwin', 'x64')?.name).toBe('dsh-desktop-0.1.3-mac-x64.dmg')
   })
 
   it('prefers the double-clickable format over the archive', () => {
@@ -87,27 +103,38 @@ describe('choosing the installer for this machine', () => {
   })
 
   it('picks the Windows installer', () => {
-    expect(selectAsset(RELEASE_ASSETS, 'win32', 'x64')?.name)
-      .toBe('DeepSeek-Harness-Setup-0.1.0-rc.7-win-x64.exe')
+    expect(selectAsset(RELEASE_ASSETS, 'win32', 'x64')?.name).toBe('dsh-desktop-0.1.3-win-x64.exe')
   })
 
   it('accepts the architecture spellings each target uses', () => {
     // AppImage writes x86_64 and Debian writes amd64 where Node says x64.
     // Requiring the literal `x64` found neither.
-    expect(selectAsset(assets('DeepSeek-Harness-0.1.0-rc.7-linux-x86_64.AppImage'), 'linux', 'x64')).toBeDefined()
-    expect(selectAsset(assets('dsh-desktop_0.1.0-rc.7_amd64.deb'), 'linux', 'x64')).toBeDefined()
+    expect(selectAsset(assets('dsh-desktop-0.1.3-linux-x86_64.AppImage'), 'linux', 'x64')).toBeDefined()
+    expect(selectAsset(assets('dsh-desktop_0.1.3_amd64.deb'), 'linux', 'x64')).toBeDefined()
   })
 
   it('matches the platform token regardless of case', () => {
     // electron-builder writes `macOS`, not `macos`.
-    expect(selectAsset(assets('DeepSeek-Harness-0.1.0-rc.7-macOS-arm64.DMG'), 'darwin', 'arm64')).toBeDefined()
+    expect(selectAsset(assets('dsh-desktop-0.1.3-macOS-arm64.DMG'), 'darwin', 'arm64')).toBeDefined()
   })
 
   it('does not read one architecture as another', () => {
     // `arm64` must not satisfy a search for `x64`, in either direction, and a
     // longer token must not be matched by its own suffix.
-    expect(selectAsset(assets('DeepSeek-Harness-0.1.0-rc.7-macOS-arm64.dmg'), 'darwin', 'x64')).toBeUndefined()
-    expect(selectAsset(assets('DeepSeek-Harness-0.1.0-rc.7-macOS-x64.dmg'), 'darwin', 'arm64')).toBeUndefined()
+    expect(selectAsset(assets('dsh-desktop-0.1.3-mac-arm64.dmg'), 'darwin', 'x64')).toBeUndefined()
+    expect(selectAsset(assets('dsh-desktop-0.1.3-mac-x64.dmg'), 'darwin', 'arm64')).toBeUndefined()
+  })
+
+  it('cannot identify an architecture the default naming omits', () => {
+    // Why scripts/build-desktop.ts sets artifactName. electron-builder named
+    // the 0.1.2 build without an architecture on Windows, on macOS x64, and on
+    // the AppImage — arm64 alone got a suffix, so an Intel build differs from
+    // an Apple Silicon one only by an absent token, which nothing can match on.
+    expect(selectAsset(DEFAULT_NAMED_ASSETS, 'win32', 'x64')).toBeUndefined()
+    expect(selectAsset(DEFAULT_NAMED_ASSETS, 'darwin', 'x64')).toBeUndefined()
+    // Only the two that happen to carry one are found.
+    expect(selectAsset(DEFAULT_NAMED_ASSETS, 'darwin', 'arm64')?.name).toBe('DeepSeek.Harness-0.1.2-arm64.dmg')
+    expect(selectAsset(DEFAULT_NAMED_ASSETS, 'linux', 'x64')?.name).toBe('dsh-desktop_0.1.2_amd64.deb')
   })
 
   it('finds nothing when the release ships no build for this machine', () => {
@@ -126,8 +153,8 @@ describe('deciding whether to offer a release', () => {
   it('offers a newer release with this platform’s installer', () => {
     const update = resolveUpdate(base, '0.1.2-alpha.3', 'darwin', 'arm64')
     expect(update?.version).toBe('0.2.0')
-    expect(update?.assetName).toBe('DeepSeek-Harness-0.1.0-rc.7-macOS-arm64.dmg')
-    expect(update?.downloadUrl).toContain('macOS-arm64.dmg')
+    expect(update?.assetName).toBe('dsh-desktop-0.1.3-mac-arm64.dmg')
+    expect(update?.downloadUrl).toContain('mac-arm64.dmg')
   })
 
   it('offers nothing when the running version is current or newer', () => {
@@ -163,8 +190,7 @@ describe('deciding whether to offer a release', () => {
 })
 
 describe('redirecting downloads to a mirror', () => {
-  const url = 'https://github.com/owner/repo/releases/download/desktop-v0.1.0-rc.7/'
-    + 'DeepSeek-Harness-Setup-0.1.0-rc.7-win-x64.exe'
+  const url = 'https://github.com/owner/repo/releases/download/desktop-v0.1.3/dsh-desktop-0.1.3-win-x64.exe'
 
   it('keeps the feed’s own URL when nothing is configured', () => {
     expect(resolveDownloadUrl(url, undefined)).toBe(url)
@@ -175,9 +201,9 @@ describe('redirecting downloads to a mirror', () => {
     // A mirror only has to serve the same file names under one prefix, which is
     // what makes switching to a domestic CDN a configuration change.
     expect(resolveDownloadUrl(url, 'https://mirror.example/dsh'))
-      .toBe('https://mirror.example/dsh/DeepSeek-Harness-Setup-0.1.0-rc.7-win-x64.exe')
+      .toBe('https://mirror.example/dsh/dsh-desktop-0.1.3-win-x64.exe')
     expect(resolveDownloadUrl(url, 'https://mirror.example/dsh/'))
-      .toBe('https://mirror.example/dsh/DeepSeek-Harness-Setup-0.1.0-rc.7-win-x64.exe')
+      .toBe('https://mirror.example/dsh/dsh-desktop-0.1.3-win-x64.exe')
   })
 
   it('threads the configured base through the resolved update', () => {
@@ -185,7 +211,7 @@ describe('redirecting downloads to a mirror', () => {
       { tag_name: 'desktop-v0.2.0', assets: RELEASE_ASSETS },
       '0.1.0', 'win32', 'x64', 'https://mirror.example/dsh',
     )
-    expect(update?.downloadUrl).toBe('https://mirror.example/dsh/DeepSeek-Harness-Setup-0.1.0-rc.7-win-x64.exe')
+    expect(update?.downloadUrl).toBe('https://mirror.example/dsh/dsh-desktop-0.1.3-win-x64.exe')
   })
 })
 

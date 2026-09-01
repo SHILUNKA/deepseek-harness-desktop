@@ -190,6 +190,13 @@ async function writeBuilderConfig(): Promise<void> {
 appId: ai.deepseek.harness.desktop
 productName: DeepSeek Harness
 electronVersion: ${electronVersion()}
+# Every installer carries its architecture, which the default naming does not:
+# the 0.1.2 build produced "DeepSeek Harness Setup 0.1.2.exe" with no arch at
+# all, and names macOS x64 without the suffix it gives arm64 — so an Intel and
+# an Apple Silicon build would differ only by an absent token, and the updater
+# could not tell a Windows build's architecture at all. ASCII and hyphenated
+# also spares every download URL a %20 for each space.
+artifactName: dsh-desktop-\${version}-\${os}-\${arch}.\${ext}
 asar: false
 npmRebuild: false
 directories:
