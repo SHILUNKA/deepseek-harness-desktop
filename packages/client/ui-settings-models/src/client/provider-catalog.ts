@@ -75,6 +75,10 @@ export function resolveProviderName(
  */
 const CATALOG_CONSOLES: Readonly<Record<string, string>> = {
   'deepseek': 'https://platform.deepseek.com/api_keys',
+  // The first-run step's own route: it is the official adapter's id, not a
+  // pi-ai catalog one, and without it the very first key a person is asked
+  // for is the one screen offering no way to go get it.
+  'deepseek-official': 'https://platform.deepseek.com/api_keys',
   'zai': 'https://z.ai',
   'zai-coding-cn': 'https://bigmodel.cn/apikey/platform',
   'minimax': 'https://www.minimax.io',

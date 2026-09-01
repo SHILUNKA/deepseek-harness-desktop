@@ -5,5 +5,7 @@
   - textbox "API 密钥":
     - /placeholder: 输入 API 密钥
   - button "从剪贴板填入"
+  - link "获取 API Key ↗":
+    - /url: https://platform.deepseek.com/api_keys
   - button "稍后配置"
   - button "保存并继续" [disabled]

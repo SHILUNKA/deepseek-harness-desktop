@@ -1554,9 +1554,19 @@ describe('filling the key from the clipboard', () => {
     return screen.getByLabelText<HTMLInputElement>(en.keyInput)
   }
 
+  it('sends the first-run card to the DeepSeek console that issues the key', async () => {
+    // The very first key a person is ever asked for. Without this the one
+    // screen that blocks getting started offers no way to go get what it asks
+    // for; `deepseek-official` is the official adapter's own route id, which is
+    // why it needs its own entry beside the pi-ai catalog's `deepseek`.
+    await renderCredentialCard()
+
+    const link = screen.getByText<HTMLAnchorElement>(en.keyConsole)
+    expect(link.getAttribute('href')).toBe('https://platform.deepseek.com/api_keys')
+    expect(link.getAttribute('target')).toBe('_blank')
+  })
+
   it('links a catalog route to the console that issues its key', async () => {
-    // `deepseek` is in the console table; the onboarding card above uses
-    // `deepseek-official`, which is not, so it renders no link at all.
     const { face } = scriptedFace({})
     const { ProviderEditor } = await import('../src/client/ProviderEditor.tsx')
     render(<ProviderEditor
