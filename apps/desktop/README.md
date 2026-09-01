@@ -67,6 +67,29 @@ External [MCP](https://modelcontextprotocol.io/) tool servers are added under **
 
 Only stdio servers are configurable this way. An HTTP MCP server, or one needing environment variables or a working directory, still needs a composed [`mcp-client`](../../packages/mcp/mcp-client/README.md) row in a `cordis.patch.yml`.
 
+## Checking for updates
+
+The app asks the release feed for the newest published version once after it
+starts, and again whenever you pick `检查更新…` from the menu. A newer version is
+offered, downloaded in the background, and then opened for you to install. The
+app never replaces itself: these builds are unsigned, and an unattended
+replacement needs a signed and notarized bundle on macOS.
+
+The automatic check is silent about failure. A machine that cannot reach the
+feed says nothing, because nobody asked; a check started from the menu answers
+either way, since a menu item that sometimes does nothing reads as broken.
+
+Prereleases are passed over. The release workflow marks a version carrying a
+prerelease identifier as one, so an alpha is never offered to an ordinary
+installation. GitHub's `releases/latest` withholds prereleases too, so until a
+release without a prerelease identifier is published the check finds nothing
+and stays quiet — which is the intended behaviour, not a failure.
+
+| Variable | What it redirects |
+|---|---|
+| `DSH_DESKTOP_UPDATE_FEED` | The release metadata URL. |
+| `DSH_DESKTOP_UPDATE_DOWNLOAD_BASE` | Where installers are fetched from, keeping their published file names. Point it at a mirror serving the same names under one prefix. |
+
 ## Model Experience
 
 None, as the package is a desktop shell around the web surface; nothing here reaches a model request.

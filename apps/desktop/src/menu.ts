@@ -15,12 +15,15 @@ import { Menu, shell, type MenuItemConstructorOptions } from 'electron'
 const DOCS_URL = 'https://github.com/deepseek-ai/deepseek-harness'
 
 /** The macOS application menu, which owns About and Quit on that platform only. */
-function appMenu(name: string): MenuItemConstructorOptions[] {
+function appMenu(name: string, onCheckForUpdates: () => void): MenuItemConstructorOptions[] {
   if (process.platform !== 'darwin') return []
   return [{
     label: name,
     submenu: [
       { role: 'about' },
+      // Directly under About is where macOS puts this, and where a person
+      // looks for it; every other platform keeps it in Help.
+      { label: '检查更新…', click: onCheckForUpdates },
       { type: 'separator' },
       { role: 'services' },
       { type: 'separator' },
@@ -36,10 +39,11 @@ function appMenu(name: string): MenuItemConstructorOptions[] {
 /**
  * Install the application menu.
  * @param name - the product name shown in the macOS application menu.
+ * @param onCheckForUpdates - runs the interactive update check.
  */
-export function installApplicationMenu(name: string): void {
+export function installApplicationMenu(name: string, onCheckForUpdates: () => void): void {
   const template: MenuItemConstructorOptions[] = [
-    ...appMenu(name),
+    ...appMenu(name, onCheckForUpdates),
     {
       label: 'Edit',
       submenu: [
@@ -79,10 +83,16 @@ export function installApplicationMenu(name: string): void {
     },
     {
       role: 'help',
-      submenu: [{
-        label: 'Documentation',
-        click: () => { void shell.openExternal(DOCS_URL) },
-      }],
+      submenu: [
+        {
+          label: 'Documentation',
+          click: () => { void shell.openExternal(DOCS_URL) },
+        },
+        // macOS already carries this in the application menu above.
+        ...process.platform === 'darwin'
+          ? []
+          : [{ type: 'separator' as const }, { label: '检查更新…', click: onCheckForUpdates }],
+      ],
     },
   ]
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
