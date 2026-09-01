@@ -1519,3 +1519,112 @@ describe('apiKeyFailure', () => {
     expect(apiKeyFailure('"a')).toBeUndefined()
   })
 })
+
+describe('filling the key from the clipboard', () => {
+  /** jsdom ships no clipboard, so each case installs exactly the one it needs. */
+  function withClipboard(readText: (() => Promise<string>) | undefined): void {
+    if (readText === undefined) {
+      Reflect.deleteProperty(navigator, 'clipboard')
+      return
+    }
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { readText },
+      configurable: true,
+    })
+  }
+
+  afterEach(() => { withClipboard(undefined) })
+
+  async function renderCredentialCard() {
+    const { face } = scriptedFace({})
+    const { ProviderEditor } = await import('../src/client/ProviderEditor.tsx')
+    render(<ProviderEditor
+      provider="deepseek-official"
+      displayName="DeepSeek"
+      hideTitle
+      namespace={wireNamespaces()[0]!}
+      schema={settingsSchema}
+      settingsPath={[]}
+      operations={operationsWith(face)}
+      t={t}
+      readOnly={false}
+      credentialOnly
+      onClose={vi.fn()}
+    />)
+    return screen.getByLabelText<HTMLInputElement>(en.keyInput)
+  }
+
+  it('links a catalog route to the console that issues its key', async () => {
+    // `deepseek` is in the console table; the onboarding card above uses
+    // `deepseek-official`, which is not, so it renders no link at all.
+    const { face } = scriptedFace({})
+    const { ProviderEditor } = await import('../src/client/ProviderEditor.tsx')
+    render(<ProviderEditor
+      provider="deepseek"
+      displayName="DeepSeek"
+      hideTitle
+      namespace={wireNamespaces()[0]!}
+      schema={settingsSchema}
+      settingsPath={[]}
+      operations={operationsWith(face)}
+      t={t}
+      readOnly={false}
+      credentialOnly
+      onClose={vi.fn()}
+    />)
+
+    const link = screen.getByText<HTMLAnchorElement>(en.keyConsole)
+    expect(link.getAttribute('href')).toBe('https://platform.deepseek.com/api_keys')
+    // Opens outside the app, and cannot reach back into it.
+    expect(link.getAttribute('target')).toBe('_blank')
+    expect(link.getAttribute('rel')).toBe('noreferrer noopener')
+  })
+
+  it('offers no clipboard action where the browser has no clipboard to read', async () => {
+    // A button that can only fail is worse than no button.
+    await renderCredentialCard()
+
+    expect(screen.queryByText(en.keyClipboard)).toBeNull()
+  })
+
+  it('fills the field with what the clipboard holds, trimmed', async () => {
+    // A key copied from a web page routinely carries a trailing newline.
+    withClipboard(() => Promise.resolve('  sk-from-clipboard-0123456789\n'))
+    const key = await renderCredentialCard()
+
+    fireEvent.click(screen.getByText(en.keyClipboard))
+
+    await waitFor(() => { expect(key.value).toBe('sk-from-clipboard-0123456789') })
+  })
+
+  it('says so when the clipboard holds nothing to paste', async () => {
+    withClipboard(() => Promise.resolve('   '))
+    const key = await renderCredentialCard()
+
+    fireEvent.click(screen.getByText(en.keyClipboard))
+
+    await waitFor(() => { expect(screen.getByText(en.keyClipboardEmpty)).toBeTruthy() })
+    expect(key.value).toBe('')
+  })
+
+  it('points back at the keyboard when the read is refused', async () => {
+    // A denied permission is not something the person can act on differently.
+    withClipboard(() => Promise.reject(new Error('denied')))
+    await renderCredentialCard()
+
+    fireEvent.click(screen.getByText(en.keyClipboard))
+
+    await waitFor(() => { expect(screen.getByText(en.keyClipboardBlocked)).toBeTruthy() })
+  })
+
+  it('clears the clipboard complaint once the field is typed in', async () => {
+    withClipboard(() => Promise.reject(new Error('denied')))
+    const key = await renderCredentialCard()
+    fireEvent.click(screen.getByText(en.keyClipboard))
+    await waitFor(() => { expect(screen.getByText(en.keyClipboardBlocked)).toBeTruthy() })
+
+    fireEvent.change(key, { target: { value: 'sk-typed' } })
+
+    expect(screen.queryByText(en.keyClipboardBlocked)).toBeNull()
+  })
+})

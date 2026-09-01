@@ -111,3 +111,25 @@
   line-height: 1.5;
   color: var(--dsw-alias-label-tertiary);
 }
+
+/* A list edited as lines. Shares the input's frame so a card reads as one
+   family, but wraps and grows: an MCP launch command is long, and hiding its
+   tail inside a single-line box is what sends people back to the YAML. */
+.textarea {
+  composes: input;
+  height: auto;
+  min-height: 88px;
+  padding: 8px 12px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.textarea:focus-visible {
+  outline: none;
+  border-color: var(--dsw-alias-brand-primary);
+}
+
+.textareaInvalid {
+  composes: textarea;
+  border-color: var(--dsw-alias-label-error);
+}

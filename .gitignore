@@ -40,3 +40,6 @@ apps/web/dist/
 worktrees/
 .agents/worktrees/
 .typert-*/
+
+# Desktop application staging and installers (scripts/build-desktop.ts)
+dist-desktop/

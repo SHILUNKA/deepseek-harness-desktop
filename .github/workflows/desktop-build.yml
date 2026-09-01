@@ -1,0 +1,79 @@
+# Desktop installers for macOS, Windows, and Linux.
+#
+# Each installer is built on its own runner: electron-builder needs the target
+# platform's tooling, and the payload carries platform-specific native modules
+# (koffi, node-pty, the Landlock launcher on Linux) that must come from that
+# platform's own install.
+#
+# Artifacts are unsigned. Signing identities and notarization belong to a
+# release workflow holding the secrets, not to this build.
+name: desktop-build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['desktop-v*']
+
+jobs:
+  build:
+    strategy:
+      # One platform's failure must not cancel the others: a platform-specific
+      # packaging break is exactly what this matrix exists to surface.
+      fail-fast: false
+      matrix:
+        # Each architecture builds on a runner of that architecture. pnpm
+        # installs optional native packages for the machine it runs on, and
+        # `pnpm deploy --legacy` ignores `supportedArchitectures`, so a
+        # cross-architecture build would ship the runner's binaries instead of
+        # the target's. macos-15-intel is the last Intel image GitHub offers
+        # (through August 2027, after which Actions drops macOS x86_64
+        # entirely); macos-latest is Apple Silicon.
+        include:
+          - os: macos-latest
+            platform: mac
+            arch: arm64
+          - os: macos-15-intel
+            platform: mac
+            arch: x64
+          - os: windows-latest
+            platform: win
+            arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace
+        run: pnpm run build
+
+      # Invoked directly, never through `pnpm run`: `pnpm deploy` refuses to run
+      # beneath another pnpm process and would target the workspace instead of
+      # the staging tree.
+      - name: Package
+        run: node --import tsx/esm scripts/build-desktop.ts --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.platform }}-${{ matrix.arch }}
+          if-no-files-found: error
+          path: |
+            dist-desktop/out/*.dmg
+            dist-desktop/out/*.zip
+            dist-desktop/out/*.exe
+            dist-desktop/out/*.AppImage
+            dist-desktop/out/*.deb
+
+# Indexing touch: GitHub registers a workflow when a push changes its file.

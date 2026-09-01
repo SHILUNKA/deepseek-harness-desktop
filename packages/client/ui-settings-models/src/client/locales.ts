@@ -99,6 +99,30 @@ export const en = {
   onboardingSave: 'Save and continue',
   onboardingSaving: 'Saving…',
   keyRequired: 'Enter an API key to continue.',
+  keyConsole: 'Get an API key ↗',
+  keyClipboard: 'Paste from clipboard',
+  keyClipboardEmpty: 'The clipboard holds no text to paste.',
+  keyClipboardBlocked: 'The clipboard could not be read. Paste with the keyboard instead.',
+  // Catalog display names. pi-ai's directory answers a route id and nothing
+  // else, so a shipped provider would otherwise reach the page as the bare
+  // `zai-coding-cn` a person cannot map onto a brand. Only routes named here
+  // are renamed; anything else keeps the id, which is what an unmapped route
+  // already showed.
+  providerDeepseek: 'DeepSeek',
+  providerAntLing: 'Ant Ling',
+  providerZai: 'Z.ai (Zhipu)',
+  providerZaiCodingCn: 'Zhipu GLM Coding (China)',
+  providerMinimax: 'MiniMax',
+  providerMinimaxCn: 'MiniMax (China)',
+  providerMoonshotai: 'Moonshot AI',
+  providerMoonshotaiCn: 'Moonshot AI (China)',
+  providerKimiCoding: 'Kimi Coding',
+  providerQwenTokenPlan: 'Qwen Token Plan (Singapore)',
+  providerQwenTokenPlanCn: 'Qwen Token Plan (Beijing)',
+  providerXiaomi: 'Xiaomi MiMo',
+  providerXiaomiTokenPlanCn: 'Xiaomi MiMo Token Plan (China)',
+  providerXiaomiTokenPlanAms: 'Xiaomi MiMo Token Plan (Amsterdam)',
+  providerXiaomiTokenPlanSgp: 'Xiaomi MiMo Token Plan (Singapore)',
 }
 
 /** The settings.models namespace key union. */
@@ -203,4 +227,23 @@ export const zh: { [Key in keyof typeof en]: string } = {
   onboardingSave: '保存并继续',
   onboardingSaving: '保存中…',
   keyRequired: '请输入 API 密钥后继续。',
+  keyConsole: '获取 API Key ↗',
+  keyClipboard: '从剪贴板填入',
+  keyClipboardEmpty: '剪贴板里没有可填入的文本。',
+  keyClipboardBlocked: '无法读取剪贴板，请改用键盘粘贴。',
+  providerDeepseek: 'DeepSeek 深度求索',
+  providerAntLing: '蚂蚁百灵',
+  providerZai: '智谱 Z.ai（国际）',
+  providerZaiCodingCn: '智谱 GLM 编程版（国内）',
+  providerMinimax: 'MiniMax（国际）',
+  providerMinimaxCn: 'MiniMax（国内）',
+  providerMoonshotai: '月之暗面 Kimi（国际）',
+  providerMoonshotaiCn: '月之暗面 Kimi（国内）',
+  providerKimiCoding: 'Kimi 编程版',
+  providerQwenTokenPlan: '通义千问 Token 套餐（新加坡）',
+  providerQwenTokenPlanCn: '通义千问 Token 套餐（北京）',
+  providerXiaomi: '小米 MiMo',
+  providerXiaomiTokenPlanCn: '小米 MiMo Token 套餐（国内）',
+  providerXiaomiTokenPlanAms: '小米 MiMo Token 套餐（阿姆斯特丹）',
+  providerXiaomiTokenPlanSgp: '小米 MiMo Token 套餐（新加坡）',
 }

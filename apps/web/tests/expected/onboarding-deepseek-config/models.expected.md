@@ -27,6 +27,7 @@
       - text: DeepSeek deepseek-official API 密钥
       - textbox "API 密钥":
         - /placeholder: 已配置——输入新值可替换
+      - button "从剪贴板填入"
       - group:
         - text: 自定义设置 API 地址
         - textbox "API 地址":

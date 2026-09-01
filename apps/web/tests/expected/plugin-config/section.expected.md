@@ -33,6 +33,14 @@
           - text: Agent 循环 Agent 如何派发工具调用。
           - img
       - listitem:
+        - 'button "展开设置: 提供方故障转移"':
+          - text: 提供方故障转移 当前提供方无法服务请求时，由谁接手。
+          - img
+      - listitem:
+        - 'button "展开设置: MCP 服务器"':
+          - text: MCP 服务器 本机运行的外部工具服务器。
+          - img
+      - listitem:
         - 'button "展开设置: Subagent"':
           - text: Subagent 控制 Agent 为 Subagent 选择模型的权限。
           - img

@@ -25,6 +25,7 @@ import type { ModelsOperations } from './operations.ts'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
 import { ProviderEditor, type ProviderEditorProps } from './ProviderEditor.tsx'
 import type { en } from './locales.ts'
+import { resolveProviderName } from './provider-catalog.ts'
 import styles from './ModelsSection.module.css'
 
 /** Injected dependencies of {@link ModelsSection} (slot `inject`). */
@@ -157,7 +158,7 @@ function keyConfiguredOf(row: ProviderRow): boolean {
     : row.derivedCredential?.configured === true
 }
 
-function targetOf(row: ProviderRow): EditorTarget {
+function targetOf(row: ProviderRow, t: (key: keyof typeof en) => string): EditorTarget {
   const managedRef = deriveKeyRef(row.entry.provider)
   const credentialRef = row.apiKeyEnv === managedRef
     && row.credential?.configured === true
@@ -166,7 +167,9 @@ function targetOf(row: ProviderRow): EditorTarget {
     : undefined
   return {
     provider: row.entry.provider,
-    displayName: row.entry.displayName,
+    // Named here rather than at each render site so the row, its editor title,
+    // and the delete dialog cannot disagree about what this route is called.
+    displayName: resolveProviderName(row.entry.provider, row.entry.displayName, t),
     settingsNs: row.entry.settingsNs,
     settingsPath: row.entry.settingsPath,
     ...credentialRef === undefined ? {} : { credentialRef },
@@ -284,7 +287,10 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
     : state.rows.find(row => row.entry.provider === savedTarget.provider)
   const savedIdentity = savedRow === undefined
     ? savedTarget
-    : { provider: savedRow.entry.provider, displayName: savedRow.entry.displayName }
+    : {
+      provider: savedRow.entry.provider,
+      displayName: resolveProviderName(savedRow.entry.provider, savedRow.entry.displayName, t),
+    }
 
   // One fact decides both first-run postures on this page and the onboarding
   // step: whether the user already has a provider to talk to.
@@ -318,7 +324,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
         )}
       <ul className={styles['rows']}>
         {configured.map((row) => {
-          const target = targetOf(row)
+          const target = targetOf(row, t)
           const namespace = state.namespaces.get(target.settingsNs)
           /* v8 ignore next -- the join marks a row configured only when its namespace resolved */
           if (namespace === undefined) return null
@@ -353,7 +359,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
             <li key={row.entry.provider} className={styles['rowCard']}>
               <div className={styles['rowHead']}>
                 <span className={styles['rowIdentity']}>
-                  <span className={styles['rowName']}>{row.entry.displayName}</span>
+                  <span className={styles['rowName']}>{target.displayName}</span>
                   {/* Only the adapter can tell a hand-declared route from a
                       shipped one it also has a stored profile for, so the tag
                       follows its answer and stays off when it gives none. */}
@@ -450,11 +456,13 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                     const row = addable.find(candidate => candidate.entry.provider === event.target.value)
                     /* v8 ignore next -- the select only lists addable rows */
                     if (row === undefined) return
-                    setEditing(targetOf(row))
+                    setEditing(targetOf(row, t))
                   }}
                 >
                   {addable.map(row => (
-                    <option key={row.entry.provider} value={row.entry.provider}>{row.entry.displayName}</option>
+                    <option key={row.entry.provider} value={row.entry.provider}>
+                      {resolveProviderName(row.entry.provider, row.entry.displayName, t)}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -515,7 +523,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                     setSavedTarget(undefined)
                     setDeclaring(false)
                     setAdding(true)
-                    setEditing(targetOf(first))
+                    setEditing(targetOf(first, t))
                   }}
                 >
                   <IconPlusOutline16 size={14} />

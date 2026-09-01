@@ -121,3 +121,54 @@ export function SecretField(props: Pick<FieldProps, 'id' | 'label' | 'hint' | 't
     </div>
   )
 }
+
+/**
+ * A list edited as lines of text.
+ *
+ * The alternative — a row of controls per entry, with add and remove — is what
+ * this list eventually wants, but a launch command is a thing people paste from
+ * a README in one piece, and a textarea accepts that paste intact.
+ * @param props - the field's copy, its staged text, and the override state.
+ * @returns the labelled control.
+ */
+export function LinesField(props: FieldProps & {
+  /** Placeholder shown while the draft is empty. */
+  placeholder?: string
+}) {
+  return (
+    <div className={css.field}>
+      <div className={css.head}>
+        <label className={css.label} htmlFor={props.id}>{props.label}</label>
+        {props.overridden
+          ? (
+            <span className={css.badges}>
+              <span className={css.badge}>{props.overriddenLabel}</span>
+              <button
+                type="button"
+                className={css.reset}
+                disabled={props.disabled}
+                onClick={props.onReset}
+              >
+                {props.resetLabel}
+              </button>
+            </span>
+          )
+          : null}
+      </div>
+      <textarea
+        id={props.id}
+        className={props.invalid ? css.textareaInvalid : css.textarea}
+        rows={4}
+        spellCheck={false}
+        {...props.invalid ? { 'aria-invalid': true } : {}}
+        value={props.text}
+        placeholder={props.placeholder ?? ''}
+        disabled={props.disabled}
+        onChange={(event) => { props.onEdit(event.target.value) }}
+      />
+      <p className={props.invalid ? css.invalid : css.hint}>
+        {props.invalid ? props.invalidLabel : props.hint}
+      </p>
+    </div>
+  )
+}

@@ -21,6 +21,8 @@ import { resolveSlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: the ctx.remote Context merge and the forwarded-event key face.
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import { AgentLoopCard } from './AgentLoopCard.tsx'
+import { FailoverCard } from './FailoverCard.tsx'
+import { McpServersCard } from './McpServersCard.tsx'
 import { BashCard } from './BashCard.tsx'
 import { ConfigurablePluginsTab } from './ConfigurablePluginsTab.tsx'
 import { PluginsSettingsSection } from './PluginsSettingsSection.tsx'
@@ -28,6 +30,8 @@ import type { PluginsSettingsSectionInjected, PluginsSettingsTabEntry } from './
 import { SubagentModelSelectionCard } from './SubagentModelSelectionCard.tsx'
 import { WebSearchCard } from './WebSearchCard.tsx'
 import { AGENT_LOOP_NS, AgentLoopCardController } from './agent-loop-card-controller.ts'
+import { FAILOVER_NS, FailoverCardController } from './failover-card-controller.ts'
+import { MCP_SERVERS_NS, McpServersCardController } from './mcp-servers-card-controller.ts'
 import { SHELL_NS, BashCardController } from './bash-card-controller.ts'
 import { ConfigurablePluginsTabController } from './tab-store.ts'
 import {
@@ -46,6 +50,8 @@ export type {
   CardActions, CardFieldSpec, CardFieldState, CardSecretSpec, CardShell,
 } from './card-form.ts'
 export type { AgentLoopCardFace, AgentLoopCardState } from './agent-loop-card-controller.ts'
+export type { FailoverCardFace, FailoverCardState } from './failover-card-controller.ts'
+export type { McpServersCardFace, McpServersCardState } from './mcp-servers-card-controller.ts'
 export type { BashCardFace, BashCardState } from './bash-card-controller.ts'
 export type { WebSearchCardFace, WebSearchCardState } from './web-search-card-controller.ts'
 
@@ -67,6 +73,8 @@ export function apply(ctx: ClientContext): void {
 
   const bash = new BashCardController(ctx.settingsScope.bind({ namespace: SHELL_NS }))
   const agentLoop = new AgentLoopCardController(ctx.settingsScope.bind({ namespace: AGENT_LOOP_NS }))
+  const failover = new FailoverCardController(ctx.settingsScope.bind({ namespace: FAILOVER_NS }))
+  const mcpServers = new McpServersCardController(ctx.settingsScope.bind({ namespace: MCP_SERVERS_NS }))
   const webSearch = new WebSearchCardController(
     ctx.settingsScope.bind({ namespace: WEB_SEARCH_NS }), ctx)
   const subagentModelSelection = new SubagentModelSelectionCardController(
@@ -177,6 +185,18 @@ export function apply(ctx: ClientContext): void {
       locale: NS,
       inject: () => agentLoop.inject(),
     }, AgentLoopCard)
+    yield ctx.slots.register({
+      name: 'settings.plugin.item',
+      key: FAILOVER_NS,
+      locale: NS,
+      inject: () => failover.inject(),
+    }, FailoverCard)
+    yield ctx.slots.register({
+      name: 'settings.plugin.item',
+      key: MCP_SERVERS_NS,
+      locale: NS,
+      inject: () => mcpServers.inject(),
+    }, McpServersCard)
     yield ctx.slots.register({
       name: 'settings.plugin.item',
       key: SUBAGENT_MODEL_SELECTION_NS,

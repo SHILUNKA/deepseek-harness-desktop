@@ -90,7 +90,7 @@ describe.skipIf(MODE === 'record')('web e2e: another usable provider ends first-
     const settings = page.getByRole('dialog', { name: '设置' })
     await settings.getByRole('textbox', { name: 'API 密钥', exact: true }).fill('sk-e2e-minimax')
     await settings.getByRole('button', { name: '保存', exact: true }).click()
-    await settings.getByText('已保存 minimax-cn。', { exact: true }).waitFor({ timeout: 15_000 })
+    await settings.getByText('已保存 MiniMax（国内） (minimax-cn)。', { exact: true }).waitFor({ timeout: 15_000 })
 
     // Only minimax-cn is reachable; DeepSeek still holds no credential.
     const document = await readFile(join(scaffold.harnessHome, 'settings.yaml'), 'utf8')
