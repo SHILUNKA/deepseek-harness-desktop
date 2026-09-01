@@ -17,12 +17,12 @@
 import type { Context, Fiber } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import * as McpClient from '@deepseek-ai/dsh-mcp-client'
-import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
+import type {} from '@deepseek-ai/dsh-settings'
 
 export const name = 'mcp-servers'
 
 /** Namespace the managed server list is edited under. */
-export const MCP_SERVERS_NAMESPACE = settingsNamespace('mcp-servers')
+export const MCP_SERVERS_NAMESPACE = 'mcp-servers'
 
 /** One managed MCP server. */
 export interface McpServerEntry {
@@ -110,15 +110,13 @@ export function apply(ctx: Context, config: Config): void {
       try {
         // Through the schema rather than as an object literal: mcp-client's own
         // defaults (timeouts, the reconnect policy) are Schemastery's to fill,
-        // and a managed server must behave exactly like a composed one. The
-        // assertion is the one every Schemastery caller makes — the type
-        // describes the filled value, not what construction accepts.
+        // and a managed server must behave exactly like a composed one.
         fiber = ctx.plugin(McpClient, McpClient.Config({
           transport: 'stdio',
           serverName,
           command: entry.command,
           args: [...entry.args],
-        } as McpClient.Config))
+        }))
       } catch (error: unknown) {
         ctx.logger.error(`mcp-servers: server "${serverName}" was refused: %o`, error)
         continue
@@ -140,11 +138,13 @@ export function apply(ctx: Context, config: Config): void {
     pending = pending.then(reconcile, reconcile)
   }
 
-  installSettingsSection(ctx, MCP_SERVERS_NAMESPACE, Config, config, {
-    setSource: (current) => { source = current },
-    onChange: schedule,
+  ctx.inject(['settings'], (settingsCtx) => {
+    settingsCtx.settings.installSection(ctx, MCP_SERVERS_NAMESPACE, Config, config, {
+      setSource: (current) => { source = current },
+      onChange: schedule,
+    })
   })
-  // Also reconcile without waiting to be told to. `installSettingsSection`
+  // Also reconcile without waiting to be told to. `installSection`
   // announces through a settings injection, so a deployment that composes
   // servers but mounts no settings provider would otherwise never receive a
   // first pass and would run none of them. A second pass costs nothing:

@@ -20,7 +20,7 @@ import type { Context, Events } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type { RequestErrorAction } from '@deepseek-ai/dsh-agent'
 import { QUOTA_EXCEEDED_CODE, type LlmCallConfig } from '@deepseek-ai/dsh-llm'
-import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
+import type {} from '@deepseek-ai/dsh-settings'
 import type { LlmFailoverEventData } from './types.ts'
 
 export type { LlmFailoverEventData } from './types.ts'
@@ -33,7 +33,7 @@ export const inject = ['agents']
  * rather than composition: which accounts a person holds, and which they would
  * rather spend first, is theirs to change without editing a YAML file.
  */
-export const FAILOVER_SETTINGS_NAMESPACE = settingsNamespace('llm-failover')
+export const FAILOVER_SETTINGS_NAMESPACE = 'llm-failover'
 
 const DEFAULT_COOLDOWN_MS = 5 * 60 * 1000
 const DEFAULT_QUOTA_COOLDOWN_MS = 60 * 60 * 1000
@@ -109,12 +109,14 @@ export function apply(ctx: Context, config: Config, internals?: FailoverInternal
   const cooling = new Map<string, number>()
   /** The authoritative config: the settings section, or the composition entry. */
   let source: () => Config = () => config
-  installSettingsSection(ctx, FAILOVER_SETTINGS_NAMESPACE, Config, config, {
-    setSource: (current) => { source = current },
-    // Cooldowns key on the route id and deliberately survive an order edit: a
-    // provider that just reported an exhausted quota has not refilled because
-    // the person reordered the list.
-    onChange: () => {},
+  ctx.inject(['settings'], (settingsCtx) => {
+    settingsCtx.settings.installSection(ctx, FAILOVER_SETTINGS_NAMESPACE, Config, config, {
+      setSource: (current) => { source = current },
+      // Cooldowns key on the route id and deliberately survive an order edit: a
+      // provider that just reported an exhausted quota has not refilled because
+      // the person reordered the list.
+      onChange: () => {},
+    })
   })
 
   const isCooling = (provider: string): boolean => (cooling.get(provider) ?? 0) > now()

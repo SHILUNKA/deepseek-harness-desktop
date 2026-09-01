@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { app, BrowserWindow, dialog, shell } from 'electron'
 import { startDesktopHost, type DesktopHost } from './host.ts'
 import { installApplicationMenu } from './menu.ts'
+import { checkForUpdates } from './update-flow.ts'
 import { loadWindowState, trackWindowState } from './window-state.ts'
 
 /** Product name shown in the window title and the macOS application menu. */
@@ -161,8 +162,13 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   void app.whenReady().then(async () => {
-    installApplicationMenu(PRODUCT_NAME)
+    installApplicationMenu(PRODUCT_NAME, () => { void checkForUpdates(window, true) })
     window = createWindow()
     await bootHost(window)
+    // After the host is up, never before: the check is the least important
+    // thing happening at launch, and it must not compete with boot for the
+    // network or delay the first paint. Failure is logged, never surfaced —
+    // the person did not ask for this one.
+    void checkForUpdates(window, false)
   })
 }

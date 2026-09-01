@@ -41,7 +41,7 @@ node --import tsx/esm scripts/build-desktop.ts [--platform mac|win|linux]
 
 ## 其他模型服务商
 
-服务商属于用户设置，不属于 composition：[`llm-pi-ai`](../../packages/llm/llm-pi-ai/README.md) 适配器以零 route 的休眠状态挂载，一旦设置文档描述了某个 route，它便立即注册。因此桌面应用自身不内置任何服务商清单 —— 由 Models 设置页添加，profile 写入 `settings.yaml`，密钥经 `credentials.set` 写入，因此没有任何密钥进入配置文件。
+服务商属于用户设置，不属于 composition：[`llm-pi-ai`](../../packages/llm/llm-pi-ai/README.zh.md) 适配器以零 route 的休眠状态挂载，一旦设置文档描述了某个 route，它便立即注册。因此桌面应用自身不内置任何服务商清单 —— 由 Models 设置页添加，profile 写入 `settings.yaml`，密钥经 `credentials.set` 写入，因此没有任何密钥进入配置文件。
 
 多个国内服务商已存在于适配器的内置目录中，只需填写密钥；添加流程按 route id 提供它们：
 
@@ -57,15 +57,34 @@ node --import tsx/esm scripts/build-desktop.ts [--platform mac|win|linux]
 
 ## 把工作分散到多个账号
 
-上面若干服务商都提供每日或每月的免费额度，而单个额度往往撑不满一天的工作。[`llm-failover`](../../packages/llm/llm-failover/README.md) 插件正为此组合在这里：当某个服务商报告额度耗尽时，请求交由列表中的下一个来服务，而不是直接失败；耗尽的那个路由会被跳过一小时，之后重新成为首选。
+上面若干服务商都提供每日或每月的免费额度，而单个额度往往撑不满一天的工作。[`llm-failover`](../../packages/llm/llm-failover/README.zh.md) 插件正为此组合在这里：当某个服务商报告额度耗尽时，请求交由列表中的下一个来服务，而不是直接失败；耗尽的那个路由会被跳过一小时，之后重新成为首选。
 
 列表在有人填写之前是空的，填写位置为**设置 → 插件 → 提供方故障转移**，格式是以逗号分隔的 `提供方/模型` 组合。没有配置密钥的服务商会被跳过而非尝试，因此列表里可以写上比任何单个用户实际注册的更多的服务商。而被*拒绝*的密钥不会被跳过 —— 那是配置错误，它会响亮地失败，而不是被悄悄绕开。
 
 ## MCP 服务器
 
-外部 [MCP](https://modelcontextprotocol.io/) 工具服务器在**设置 → 插件 → MCP 服务器**中添加，每行一个，格式为 `名称: 命令 参数`。[`mcp-servers`](../../packages/mcp/mcp-servers/README.md) 插件会随列表变化挂载与卸载它们，因此增删一个服务器既不需要重启应用，也不需要编辑配置文件。行首加 `#` 可保留某个服务器而不运行它。
+外部 [MCP](https://modelcontextprotocol.io/) 工具服务器在**设置 → 插件 → MCP 服务器**中添加，每行一个，格式为 `名称: 命令 参数`。[`mcp-servers`](../../packages/mcp/mcp-servers/README.zh.md) 插件会随列表变化挂载与卸载它们，因此增删一个服务器既不需要重启应用，也不需要编辑配置文件。行首加 `#` 可保留某个服务器而不运行它。
 
-只有 stdio 型服务器能以这种方式配置。HTTP 型的 MCP 服务器，或需要环境变量、工作目录的服务器，仍然需要在 `cordis.patch.yml` 中组合一行 [`mcp-client`](../../packages/mcp/mcp-client/README.md)。
+只有 stdio 型服务器能以这种方式配置。HTTP 型的 MCP 服务器，或需要环境变量、工作目录的服务器，仍然需要在 `cordis.patch.yml` 中组合一行 [`mcp-client`](../../packages/mcp/mcp-client/README.zh.md)。
+
+## 检查更新
+
+应用启动后会向发布源查询一次最新版本，你从菜单选择「检查更新…」时会再查一次。
+发现新版本会先征求你同意，然后在后台下载，下载完成后为你打开安装包。应用不会
+自行替换自己：这些构建未经签名，而 macOS 上的无人值守替换需要已签名并公证的包。
+
+自动检查对失败保持沉默。连不上发布源的机器什么都不会说，因为没人问过它；从菜单
+发起的检查则一定会给出答复 —— 一个有时毫无反应的菜单项，看起来就是坏的。
+
+预发布版本会被跳过。发布工作流会把带预发布标识的版本标记为 prerelease，因此 alpha
+版永远不会被推给普通安装。GitHub 的 `releases/latest` 同样不返回 prerelease，所以在
+发布出第一个不带预发布标识的版本之前，检查会什么都找不到并保持安静 —— 这是预期行为，
+不是故障。
+
+| 环境变量 | 改变什么 |
+|---|---|
+| `DSH_DESKTOP_UPDATE_FEED` | 发布元数据的地址。 |
+| `DSH_DESKTOP_UPDATE_DOWNLOAD_BASE` | 安装包的下载来源，文件名保持不变。指向一个用同一前缀提供相同文件名的镜像即可。 |
 
 ## Model Experience
 

@@ -161,7 +161,7 @@ describe('settings-managed MCP servers', () => {
       serverName: 'taken',
       command: process.execPath,
       args: [FIXTURE],
-    } as McpClient.Config)).await()
+    })).await()
     await waitForTool(ctx, 'mcp__taken__echo', true)
 
     await ctx.settings.update(McpServers.MCP_SERVERS_NAMESPACE, {

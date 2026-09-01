@@ -51,6 +51,9 @@ const PROFILE_ROOT_FILENAME = 'cordis.yml'
 /** The session-telemetry row id the `DSH_TELEMETRY_DISABLED` switch targets. */
 const TELEMETRY_ROW_ID = 'session-telemetry-otel'
 
+/** The web-runtime row whose `openBrowser` this app turns off; it has its own window. */
+const WEB_RUNTIME_ROW_ID = 'web-runtime'
+
 /** The empty root entry list the profile's patch layers compose over. */
 const PROFILE_ROOT_CONFIG = `# dsh profile root — an empty entry list. The tree is composed as patches:
 # each bundle in package.json's dsh.profile.bundles, then cordis.patch.yml.
@@ -168,11 +171,22 @@ interface BoundWebServer {
 }
 
 /**
- * Read the bound loopback URL from the settled tree.
+ * The browser-session half this app reads back after the tree settles. The Host
+ * authenticates every index request, so the window must load the root URL
+ * carrying this process's launch token — a bare loopback URL is answered 401.
+ */
+interface BrowserSession {
+  authenticatedUrl: (baseUrl: string) => string
+}
+
+/**
+ * Read the bound loopback URL from the settled tree, carrying this process's
+ * launch token. The token is exchanged for the browser-session cookie by the
+ * one `GET /?token=...` the window makes, and never reaches an API path.
  * @param ctx - the booted root context.
  * @returns the URL the window loads.
- * @throws when the composition mounted no web server, which means the profile
- * was patched into a shape this app cannot present.
+ * @throws when the composition mounted no web server or no Connection, which
+ * means the profile was patched into a shape this app cannot present.
  */
 function resolveUrl(ctx: Context): string {
   const server = ctx.get('webServer') as BoundWebServer | undefined
@@ -182,7 +196,14 @@ function resolveUrl(ctx: Context): string {
       + `a patch layer in ${homePatchPath()} or the profile's own cordis.patch.yml disabled the webserver row`,
     )
   }
-  return `http://${server.host}:${server.port}`
+  const connection = ctx.get('connection') as BrowserSession | undefined
+  if (connection === undefined) {
+    throw new Error(
+      `${NAME}-desktop: the ${PROFILE} profile mounted no Connection; `
+      + `a patch layer in ${homePatchPath()} or the profile's own cordis.patch.yml disabled the client-connection row`,
+    )
+  }
+  return connection.authenticatedUrl(`http://${server.host}:${server.port}`)
 }
 
 /** Options for {@link startDesktopHost}. */
@@ -203,8 +224,11 @@ export interface StartDesktopHostOptions {
  * composition or plugin startup fails.
  */
 export async function startDesktopHost(options: StartDesktopHostOptions): Promise<DesktopHost> {
-  healProfilesModuleFallback(INSTALL_ANCHOR)
   const profile = loadProfile(NAME, PROFILE, INSTALL_ANCHOR)
+  // Heals after the profile loads and is handed it: plugins carried only by the
+  // profile's selected bundles are linked into its own `node_modules`, which the
+  // shared installation mirror does not cover.
+  await healProfilesModuleFallback({ installAnchor: INSTALL_ANCHOR, profile })
   const rootConfigPath = join(profile.dir, PROFILE_ROOT_FILENAME)
   // Always rewritten: the whole composition is patch layers, and the Loader's
   // tree write-back can otherwise bake composed rows into this file, which
@@ -227,6 +251,18 @@ export async function startDesktopHost(options: StartDesktopHostOptions): Promis
       config: {
         ...(rows.get('agent-presets')?.config ?? {}) as Record<string, unknown>,
         roots: [{ path: SHIPPED_PRESET_ROOT, trust: 'system' }],
+      },
+    })
+  }
+  // The profile hands the ready page to a browser, which is right for `dsh web`
+  // and wrong here: this app is the window. Overridden as a row config rather
+  // than a command flag, because the profile boots no command line to parse one.
+  if (rows.has(WEB_RUNTIME_ROW_ID)) {
+    overlays.push({
+      id: WEB_RUNTIME_ROW_ID,
+      config: {
+        ...(rows.get(WEB_RUNTIME_ROW_ID)?.config ?? {}) as Record<string, unknown>,
+        openBrowser: false,
       },
     })
   }
