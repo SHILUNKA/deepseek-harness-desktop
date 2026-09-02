@@ -681,14 +681,19 @@ select.input {
    the target is another site, not an action on this one. */
 .keyLink {
   align-self: flex-start;
-  color: var(--dsw-alias-label-tertiary);
+  /* The theme's blue, not the tertiary label its neighbours use: this is the way
+     out of an empty key field, and the one thing a first-run person without a
+     key has to find. `brand-primary` is near-black in the light theme, so the
+     informational blue is what actually reads as a link here. */
+  color: var(--dsw-alias-button-info-fill);
   font-size: 12px;
+  font-weight: 500;
   line-height: 18px;
   text-decoration: none;
 }
 
 .keyLink:hover {
-  color: var(--dsw-alias-label-secondary);
+  color: var(--dsw-alias-button-info-hover);
   text-decoration: underline;
 }
 

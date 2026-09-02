@@ -12,7 +12,7 @@
  */
 
 import { fileURLToPath } from 'node:url'
-import { app, BrowserWindow, dialog, shell } from 'electron'
+import { app, BrowserWindow, dialog, session, shell } from 'electron'
 import { startDesktopHost, type DesktopHost } from './host.ts'
 import { installApplicationMenu } from './menu.ts'
 import { checkForUpdates } from './update-flow.ts'
@@ -162,6 +162,14 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   void app.whenReady().then(async () => {
+    // The interface language. The locale plugin reads `navigator.languages` and
+    // falls back to English when it names no language it ships, so on a machine
+    // whose system language is not Chinese the same build opens in English.
+    // This app ships for Chinese users, so it states the language instead of
+    // inheriting it — the accept-languages argument is what reaches
+    // `navigator.languages`, which a command-line switch does not. Settings
+    // still overrides this per person.
+    session.defaultSession.setUserAgent(session.defaultSession.getUserAgent(), 'zh-CN')
     installApplicationMenu(PRODUCT_NAME, () => { void checkForUpdates(window, true) })
     window = createWindow()
     await bootHost(window)
