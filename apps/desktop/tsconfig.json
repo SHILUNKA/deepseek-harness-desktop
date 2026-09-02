@@ -28,6 +28,9 @@
     },
     {
       "path": "../../packages/util/launch-environment"
+    },
+    {
+      "path": "../../packages/host/directory-picker"
     }
   ]
 }

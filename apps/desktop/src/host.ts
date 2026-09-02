@@ -36,6 +36,7 @@ import {
   type Profile,
 } from '@deepseek-ai/dsh-app-boot'
 import { provideCmdline } from '@deepseek-ai/dsh-cmdline'
+import ElectronDirectoryPicker from './directory-picker.ts'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { DSH_LAUNCH_ENVIRONMENT_KEY } from '@deepseek-ai/dsh-launch-environment'
 
@@ -53,6 +54,12 @@ const TELEMETRY_ROW_ID = 'session-telemetry-otel'
 
 /** The web-runtime row whose `openBrowser` this app turns off; it has its own window. */
 const WEB_RUNTIME_ROW_ID = 'web-runtime'
+
+/** The row that probes the host and mounts a directory-picker backend; this app brings its own. */
+const DIRECTORY_PICKER_ROW_ID = 'directory-picker'
+
+/** The client half of the native picker, normally mounted by the row above. */
+const DIRECTORY_PICKER_SURFACE = '@deepseek-ai/dsh-client-ui-directory-picker-native'
 
 /** The empty root entry list the profile's patch layers compose over. */
 const PROFILE_ROOT_CONFIG = `# dsh profile root — an empty entry list. The tree is composed as patches:
@@ -266,6 +273,10 @@ export async function startDesktopHost(options: StartDesktopHostOptions): Promis
       },
     })
   }
+  // The auto row probes the host and mounts a backend for it; on Windows that
+  // backend drives the chooser from a spawned child, which cannot work under an
+  // Electron host. This app has a chooser of its own, mounted below.
+  if (rows.has(DIRECTORY_PICKER_ROW_ID)) overlays.push({ id: DIRECTORY_PICKER_ROW_ID, disabled: true })
   const telemetryPatch = resolveTelemetryPatch(process.env.DSH_TELEMETRY_DISABLED, rows.has(TELEMETRY_ROW_ID))
   if (telemetryPatch !== undefined) overlays.push(telemetryPatch)
 
@@ -284,6 +295,13 @@ export async function startDesktopHost(options: StartDesktopHostOptions): Promis
     provideCmdline(hostCtx, { args: ['--port', '0'], exit: options.onExitRequest })
   }, bareModuleBaseUrl(rootConfigPath))
   app.current = ctx
+  // After the tree settles rather than inside composition: cordis activates an
+  // injecting consumer when the service appears, so arriving late costs
+  // nothing, while the Loader is only addressable once boot returns. The client
+  // half is the same package the disabled row would have mounted — only the
+  // backend is this app's own.
+  await ctx.plugin(ElectronDirectoryPicker)
+  await ctx.loader.create({ name: DIRECTORY_PICKER_SURFACE })
   await watchPatchLayers(ctx, profile, bundlePatches, overlays)
   return { ctx, url: resolveUrl(ctx) }
 }
