@@ -28,19 +28,24 @@ jobs:
         # the target's. macos-15-intel is the last Intel image GitHub offers
         # (through August 2027, after which Actions drops macOS x86_64
         # entirely); macos-latest is Apple Silicon.
+        # TEMPORARY: Windows only, while the folder-picker fix is being tested on
+        # Windows. Building one platform turns a ~25 minute wait (the Intel
+        # macOS runner is the long pole) into a few minutes, which is the whole
+        # cost of each test round. Restore the other three entries below when
+        # the other platforms need shipping again.
         include:
-          - os: macos-latest
-            platform: mac
-            arch: arm64
-          - os: macos-15-intel
-            platform: mac
-            arch: x64
           - os: windows-latest
             platform: win
             arch: x64
-          - os: ubuntu-latest
-            platform: linux
-            arch: x64
+          # - os: macos-latest
+          #   platform: mac
+          #   arch: arm64
+          # - os: macos-15-intel
+          #   platform: mac
+          #   arch: x64
+          # - os: ubuntu-latest
+          #   platform: linux
+          #   arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     steps:
