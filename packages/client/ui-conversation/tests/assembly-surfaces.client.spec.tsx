@@ -208,7 +208,7 @@ describe('prompt rejection through the assembled composer', () => {
       }
     })
     const alert = await view.findByRole('alert')
-    expect(alert.textContent).toContain('prompt rejected before acceptance (session/agent-busy)')
+    expect(alert.textContent).toContain('当前会话正在运行，请等它结束，或先点停止再发送')
     await waitFor(() => {
       expect(shell.snapshot.draft).toBe('do not lose this')
     })

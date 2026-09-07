@@ -72,13 +72,31 @@ export interface DirectoryBrowserProps {
 }
 
 /** Failure text from the injected directory operation. */
-function failureText(error: unknown): string {
-  if (error !== null && typeof error === 'object' && 'rpcError' in error) {
-    const rpcError = error.rpcError
-    if (rpcError !== null && typeof rpcError === 'object' && 'message' in rpcError
-      && typeof rpcError.message === 'string') return rpcError.message
+function rpcErrorCode(error: unknown): string | undefined {
+  if (error === null || typeof error !== 'object' || !('rpcError' in error)) return undefined
+  const rpcError = error.rpcError
+  if (rpcError === null || typeof rpcError !== 'object' || !('code' in rpcError)) return undefined
+  return typeof rpcError.code === 'string' ? rpcError.code : undefined
+}
+
+/**
+ * Product copy for a rejected listing or folder creation.
+ *
+ * The Host's own `message` is English written for a server log; the wire
+ * `code` is the stable part, so the copy keys on that. A cause the person can
+ * act on names the way out, and anything else — including a rejection carrying
+ * no code at all — takes the generic line rather than surfacing raw English.
+ * @param t - the dialog-namespace translate.
+ * @param error - the rejection value.
+ * @returns the banner text.
+ */
+function failureText(t: Translate, error: unknown): string {
+  switch (rpcErrorCode(error)) {
+    case 'directory-picker/exists': return t('browser.error.exists')
+    case 'directory-picker/create-failed': return t('browser.error.createFailed')
+    case 'directory-picker/unreadable': return t('browser.error.unreadable')
+    default: return t('browser.error.unknown')
   }
-  return error instanceof Error ? error.message : String(error)
 }
 
 /**
@@ -475,7 +493,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
     }, (reason: unknown) => {
       if (seq !== requestSeq.current) return
       setLoading(false)
-      if (options.announce) setError(failureText(reason))
+      if (options.announce) setError(failureText(t, reason))
     })
   }, [launchListing, continueScan])
 
@@ -521,7 +539,7 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
     }, (reason: unknown) => {
       if (seq !== requestSeq.current) return
       setLoading(false)
-      setError(failureText(reason))
+      setError(failureText(t, reason))
       // An unreadable selection cannot be the committing target while the
       // breadcrumb still names the level: fall back to the single pane.
       setSelected(null)
@@ -639,12 +657,12 @@ export function DirectoryBrowser({ open, listDirectory, createDirectory, onOpen,
         /* v8 ignore next -- same fence as navigate/select; the modal blocks superseding input */
         if (seq !== requestSeq.current) return
         setLoading(false)
-        setError(failureText(reason))
+        setError(failureText(t, reason))
       })
     }, (reason: unknown) => {
       if (generation !== openGeneration.current) return
       setCreatingFolder(false)
-      setCreateError(failureText(reason))
+      setCreateError(failureText(t, reason))
     })
   }
 

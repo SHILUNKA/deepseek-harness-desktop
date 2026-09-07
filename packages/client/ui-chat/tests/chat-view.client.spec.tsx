@@ -1195,6 +1195,22 @@ describe('ChatView', () => {
     ])
   })
 
+  it('states a known failure class in the interface language instead of the provider wording', () => {
+    const h = makeHarness({
+      nodes: [user(1, 'try'), {
+        kind: 'turn-error', seq: 2, time: 2_000, turn: 1, step: 0,
+        // Verbatim from DeepSeek when the account is out of credit.
+        message: 'Insufficient Balance',
+        code: 'QUOTA',
+      }],
+    })
+    const view = render(<h.ChatView {...h.props} />)
+    expect(view.getAllByRole('status').map(status => status.textContent)).toEqual([
+      '本轮运行失败余额不足或额度已用完，请充值或更换模型服务商QUOTA',
+    ])
+    expect(view.queryByText('Insufficient Balance')).toBeNull()
+  })
+
   it('renders the max-tokens notice with localized guidance, distinct from turn errors', () => {
     const h = makeHarness({ nodes: [user(1, 'try'), assistant(2, 'truncated'), turnMaxTokens(3)] })
     const view = render(<h.ChatView {...h.props} />)
@@ -2096,7 +2112,7 @@ describe('ChatView', () => {
     expect(h.openView).toHaveBeenCalledWith('trajectory', 'a')
   })
 
-  it('shows a Host open refusal with the reason and retries the same path', async () => {
+  it('shows a Host open refusal in the interface language and retries the same path', async () => {
     const openFile = vi.fn<(path: string) => Promise<void>>()
       .mockRejectedValueOnce(new Error('xdg-open is not available'))
       .mockResolvedValueOnce(undefined)
@@ -2107,7 +2123,7 @@ describe('ChatView', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog', { name: '无法打开文件' })).toBeTruthy()
     })
-    expect(screen.getByRole('dialog', { name: '无法打开文件' }).textContent).toContain('xdg-open is not available')
+    expect(screen.getByRole('dialog', { name: '无法打开文件' }).textContent).toContain('无法打开此文件，可能是系统里没有能打开它的程序')
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: '重试' })) })
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull()
@@ -2125,7 +2141,7 @@ describe('ChatView', () => {
     render(<h.ChatView {...h.props} />)
     await act(async () => { h.toolOwners[0]!.openFile('notes.md') })
     await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: '无法打开文件' }).textContent).toContain('permission denied')
+      expect(screen.getByRole('dialog', { name: '无法打开文件' }).textContent).toContain('无法打开此文件，可能是系统里没有能打开它的程序')
     })
     fireEvent.click(screen.getByRole('button', { name: '取消' }))
     expect(screen.queryByRole('dialog')).toBeNull()
@@ -2168,7 +2184,7 @@ describe('ChatView', () => {
     render(<h.ChatView {...h.props} />)
     await act(async () => { h.toolOwners[0]!.openFile('src/a.ts') })
     await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: '无法打开文件' }).textContent).toContain('first refusal')
+      expect(screen.getByRole('dialog', { name: '无法打开文件' }).textContent).toContain('无法打开此文件，可能是系统里没有能打开它的程序')
     })
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: '重试' })) })
     fireEvent.click(screen.getByRole('button', { name: '取消' }))
@@ -2189,7 +2205,7 @@ describe('ChatView', () => {
     render(<h.ChatView {...h.props} />)
     await act(async () => { h.toolOwners[0]!.openFile('src/a.ts') })
     await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: '无法打开文件' }).textContent).toContain('first refusal')
+      expect(screen.getByRole('dialog', { name: '无法打开文件' }).textContent).toContain('无法打开此文件，可能是系统里没有能打开它的程序')
     })
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: '重试' })) })
     fireEvent.click(screen.getByRole('button', { name: '取消' }))

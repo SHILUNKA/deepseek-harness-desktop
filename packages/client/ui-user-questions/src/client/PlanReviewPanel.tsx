@@ -36,9 +36,11 @@ export function PlanReviewPanel({ pending, review, t }: PlanReviewPanelProps) {
   const settle = (send: () => Promise<void>): void => {
     setBusy(true)
     setError(null)
-    void send().catch((cause: unknown) => {
+    void send().catch(() => {
       setBusy(false)
-      setError(cause instanceof Error ? cause.message : String(cause))
+      // The rejection is a transport or host diagnostic in English; the person
+      // gets the localized line and the original stays in the log.
+      setError(t('plan.sendFailed'))
     })
   }
   const decide = (label: string): void => {

@@ -13,6 +13,9 @@ export const zh = {
   'action.resume': '恢复目标',
   'action.edit': '编辑目标',
   'action.clear': '清除目标',
+  'error.busy': '当前会话正在运行，请等它结束后再改目标',
+  'error.conflict': '目标已在别处变动，请刷新页面后重试',
+  'error.unknown': '操作失败，请重试；若反复出现请把错误码反馈给我们（{code}）',
 } satisfies Record<string, string>
 
 /** The goal namespace key union. */
@@ -31,4 +34,7 @@ export const en = {
   'action.resume': 'Resume goal',
   'action.edit': 'Edit goal',
   'action.clear': 'Clear goal',
+  'error.busy': 'This session is still running — wait for it to finish before changing the goal',
+  'error.conflict': 'The goal changed elsewhere; reload the page and try again',
+  'error.unknown': 'Action failed. Retry, and report this code if it persists ({code})',
 } satisfies Record<GoalKey, string>

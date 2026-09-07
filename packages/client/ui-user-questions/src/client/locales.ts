@@ -17,6 +17,7 @@ export const zh = {
   'plan.approve': '确认执行',
   'plan.decline': '拒绝',
   'plan.discuss': '去聊天里说',
+  'plan.sendFailed': '提交失败，请重试；若一直不成功，请检查网络或重启软件',
 } satisfies Record<string, string>
 
 /** The question namespace key union. */
@@ -39,4 +40,5 @@ export const en = {
   'plan.approve': 'Approve',
   'plan.decline': 'Refuse',
   'plan.discuss': 'Chat about it',
+  'plan.sendFailed': 'Could not submit. Retry; if it keeps failing, check your connection or restart the app',
 } satisfies Record<QuestionKey, string>

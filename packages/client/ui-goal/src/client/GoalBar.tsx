@@ -24,6 +24,25 @@ export interface GoalBarProps extends GoalBarActions {
   goal: GoalSnapshot | null | undefined
 }
 
+/**
+ * Product copy for a rejected goal action.
+ *
+ * The wire error's own `message` is server-log English that says nothing about
+ * what to do; the `code` is the stable part, so the copy keys on it. Causes the
+ * person can act on name the way out, and anything else folds into one line
+ * that still carries the code for a bug report.
+ * @param t - the goal-namespace translate.
+ * @param code - the wire error code.
+ * @returns the inline error text.
+ */
+function actionErrorText(t: PropsLocale<'goal'>['t'], code: string): string {
+  switch (code) {
+    case 'session/agent-busy': return t('error.busy')
+    case 'session/conflict': return t('error.conflict')
+    default: return t('error.unknown', { code })
+  }
+}
+
 /** Strip label keys per visible phase; complete goals render nothing. */
 const PHASE_LABELS = {
   active: 'phase.active',
@@ -58,9 +77,9 @@ export function GoalBar({ goal, onEdit, onPause, onResume, onClear, t }: GoalBar
     const result = await action()
     pendingRef.current = false
     setPending(false)
-    if (!result.ok) setActionError(`${result.error.message} (${result.error.code})`)
+    if (!result.ok) setActionError(actionErrorText(t, result.error.code))
     return result
-  }, [])
+  }, [t])
 
   const handleEdit = useCallback(async () => {
     const trimmed = draft.trim()

@@ -269,7 +269,7 @@ describe('PlanReviewPanel', () => {
     render(<QuestionComposer matched={carrier} {...kit} />)
 
     fireEvent.click(screen.getByRole('button', { name: zh['plan.approve'] }))
-    const failure = await screen.findByText('question response rejected: not-pending')
+    const failure = await screen.findByText(zh['plan.sendFailed'])
     expect(failure.getAttribute('role')).toBe('status')
     // Re-armed for the retry: a lost click must not leave a dead card.
     expect(screen.getByRole('button', { name: zh['plan.approve'] }).hasAttribute('disabled')).toBe(false)
@@ -277,7 +277,7 @@ describe('PlanReviewPanel', () => {
     expect(answer).toHaveBeenCalledTimes(2)
   })
 
-  it('reports a non-Error transport failure as its stringified value', async () => {
+  it('reports a non-Error transport failure in the interface language', async () => {
     // A non-Error rejection is the case under test: a carrier can reject with
     // anything, and the panel must still show the user something.
     const { carrier, cancel } = wait()
@@ -285,7 +285,7 @@ describe('PlanReviewPanel', () => {
     render(<QuestionComposer matched={carrier} {...kit} />)
 
     fireEvent.click(screen.getByRole('button', { name: zh['plan.discuss'] }))
-    expect(await screen.findByText('socket gone')).toBeTruthy()
+    expect(await screen.findByText(zh['plan.sendFailed'])).toBeTruthy()
   })
 
   it('carries the same decision surface in English', () => {

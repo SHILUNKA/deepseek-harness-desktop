@@ -49,6 +49,10 @@ export function apply(ctx: ClientContext): void {
         'browser.loading': '加载中…',
         'browser.truncated': '文件夹过多，仅显示开头部分。',
         'browser.showHidden': '显示隐藏文件',
+        'browser.error.exists': '同名文件夹已存在，请换一个名字',
+        'browser.error.createFailed': '无法新建文件夹，可能是没有写入权限，请换一个位置',
+        'browser.error.unreadable': '无法读取这个文件夹，可能是没有访问权限',
+        'browser.error.unknown': '操作失败，请重试；若一直不成功，请换一个位置',
       }],
       ['en', {
         'browser.title': 'Select Workspace Directory',
@@ -64,6 +68,10 @@ export function apply(ctx: ClientContext): void {
         'browser.loading': 'Loading…',
         'browser.truncated': 'Too many folders to list; only the beginning is shown.',
         'browser.showHidden': 'Show hidden files',
+        'browser.error.exists': 'A folder with that name already exists — choose another name',
+        'browser.error.createFailed': 'Could not create the folder — you may not have write permission here',
+        'browser.error.unreadable': 'Could not read this folder — you may not have permission',
+        'browser.error.unknown': 'Action failed. Retry, or choose a different location',
       }],
     ]
     try {

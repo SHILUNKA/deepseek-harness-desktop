@@ -6,6 +6,13 @@
  * and window roles a desktop user expects (without them, even Cmd+C stops
  * working, because the shortcuts live on the menu, not the web page) and moves
  * the developer entries behind a submenu.
+ *
+ * Every label is written out in Chinese, including the ones a `role` would
+ * otherwise fill in. Electron localizes a role's label from the *system*
+ * language, so on a machine whose Windows is not Chinese the same build shows
+ * "Edit / View / Window / Help" beside a fully Chinese interface. This app
+ * ships for Chinese users and states its language rather than inheriting it,
+ * the same choice `main.ts` makes for `navigator.languages`.
  * @module @deepseek-ai/dsh-desktop/menu
  */
 
@@ -45,47 +52,48 @@ export function installApplicationMenu(name: string, onCheckForUpdates: () => vo
   const template: MenuItemConstructorOptions[] = [
     ...appMenu(name, onCheckForUpdates),
     {
-      label: 'Edit',
+      label: '编辑',
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        { role: 'undo', label: '撤销' },
+        { role: 'redo', label: '重做' },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' },
+        { role: 'cut', label: '剪切' },
+        { role: 'copy', label: '复制' },
+        { role: 'paste', label: '粘贴' },
+        { role: 'selectAll', label: '全选' },
       ],
     },
     {
-      label: 'View',
+      label: '视图',
       submenu: [
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { role: 'resetZoom', label: '实际大小' },
+        { role: 'zoomIn', label: '放大' },
+        { role: 'zoomOut', label: '缩小' },
         { type: 'separator' },
-        { role: 'togglefullscreen' },
+        { role: 'togglefullscreen', label: '切换全屏' },
         { type: 'separator' },
         {
-          label: 'Developer',
+          label: '开发者',
           submenu: [
-            { role: 'reload' },
-            { role: 'forceReload' },
-            { role: 'toggleDevTools' },
+            { role: 'reload', label: '重新加载' },
+            { role: 'forceReload', label: '强制重新加载' },
+            { role: 'toggleDevTools', label: '开发者工具' },
           ],
         },
       ],
     },
     {
-      label: 'Window',
+      label: '窗口',
       submenu: process.platform === 'darwin'
-        ? [{ role: 'minimize' }, { role: 'zoom' }, { type: 'separator' }, { role: 'front' }]
-        : [{ role: 'minimize' }, { role: 'close' }],
+        ? [{ role: 'minimize', label: '最小化' }, { role: 'zoom', label: '缩放' }, { type: 'separator' }, { role: 'front', label: '全部置于顶层' }]
+        : [{ role: 'minimize', label: '最小化' }, { role: 'close', label: '关闭' }],
     },
     {
       role: 'help',
+      label: '帮助',
       submenu: [
         {
-          label: 'Documentation',
+          label: '文档',
           click: () => { void shell.openExternal(DOCS_URL) },
         },
         // macOS already carries this in the application menu above.

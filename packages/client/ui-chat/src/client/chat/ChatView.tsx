@@ -117,11 +117,6 @@ function scrollPosition(list: HTMLElement, scrollport: HTMLElement): ChatScrollP
 }
 
 /** Host/OS refusal text for the file-open dialog; empty throws keep a locale fallback. */
-function openFailureMessage(error: unknown, fallback: string): string {
-  const message = error instanceof Error ? error.message : String(error)
-  return message === '' ? fallback : message
-}
-
 /** ProducedFiles opens the session workspace as `.`. */
 function isFolderOpenPath(path: string): boolean {
   return path === '.'
@@ -248,14 +243,13 @@ export function ChatView({
         setFileOpenError(null)
         setFileOpenBusy(false)
       },
-      (error: unknown) => {
+      () => {
         if (id !== fileOpenRequest.current) return
         setFileOpenError({
           path,
-          message: openFailureMessage(
-            error,
-            t(isFolderOpenPath(path) ? 'fileOpen.folderUnknown' : 'fileOpen.unknown'),
-          ),
+          // The rejection carries the host's English diagnostic; the person
+          // gets the localized line instead, and the log keeps the original.
+          message: t(isFolderOpenPath(path) ? 'fileOpen.folderUnknown' : 'fileOpen.unknown'),
         })
         setFileOpenBusy(false)
       },

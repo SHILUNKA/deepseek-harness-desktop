@@ -40,12 +40,37 @@ interface RetryCountdown {
   seconds: number
 }
 
+/**
+ * Copy of our own for the provider-neutral failure classes.
+ *
+ * A provider's own `message` is written for whoever reads its API logs: it is
+ * English, it names the vendor's billing vocabulary rather than the person's
+ * ("Insufficient Balance"), and it says nothing about what to do next. These
+ * classes are stable and mean the same thing whichever provider raised them,
+ * so each one gets a sentence that names the cause and the fix. Anything not
+ * listed keeps the provider's text — an unrecognized failure is better shown
+ * verbatim than flattened into a guess.
+ */
+const FAILURE_COPY: Readonly<Record<string, Parameters<ChatViewSlotProps['t']>[0]>> = {
+  AUTH: 'message.failure.auth',
+  QUOTA: 'message.failure.quota',
+  INVALID_CREDENTIAL: 'message.failure.invalidCredential',
+  MISSING_CREDENTIAL: 'message.failure.missingCredential',
+  RATE_LIMIT: 'message.failure.rateLimit',
+  SERVER: 'message.failure.server',
+  TIMEOUT: 'message.failure.timeout',
+  TRANSPORT: 'message.failure.transport',
+  CONTEXT_WINDOW_EXCEEDED: 'message.failure.contextWindow',
+  EMPTY_RESPONSE: 'message.failure.emptyResponse',
+}
+
 function failureMessage(
   message: string,
   code: unknown,
   t: ChatViewSlotProps['t'],
 ): string {
-  return code === 'AUTH' ? t('message.failure.auth') : message
+  const key = typeof code === 'string' ? FAILURE_COPY[code] : undefined
+  return key === undefined ? message : t(key)
 }
 
 function ModelRetryItem({ node, active, t }: {

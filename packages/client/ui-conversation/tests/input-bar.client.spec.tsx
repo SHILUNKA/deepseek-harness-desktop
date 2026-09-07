@@ -339,7 +339,7 @@ describe('image draft rail', () => {
     expect(attachmentOwner(result.slotCalls).dropLimits).toEqual({ count: 20, size: '5MB' })
   })
 
-  it('announces server attachment rejections as product copy, other codes as developer text', () => {
+  it('announces every server rejection as product copy, keyed by attachment reason or wire code', () => {
     const attachmentError = (reason: string): SessionSnapshot['promptError'] => ({
       op: 'send',
       error: new RemoteError('session/attachment-invalid', 'raw wire text', { reason }),
@@ -364,7 +364,7 @@ describe('image draft rail', () => {
     const other = bench({
       promptError: { op: 'send', error: new RemoteError('gateway/internal', 'boom', {}) },
     })
-    expect(other.view.getByRole('alert').textContent).toContain('boom (gateway/internal)')
+    expect(other.view.getByRole('alert').textContent).toContain('软件内部出错，请重试；若反复出现请把错误码反馈给我们（gateway/internal）')
   })
 
   it('marks the attachment slot unavailable while the composer is locked', () => {
@@ -1242,7 +1242,7 @@ describe('strips and variants', () => {
       })
       // The toast body-portals (transformed ancestors must not trap it), so
       // queries go through the view's document-bound helpers.
-      expect(send.view.getByRole('alert').textContent).toContain('boom (session/agent-busy)')
+      expect(send.view.getByRole('alert').textContent).toContain('当前会话正在运行，请等它结束，或先点停止再发送')
       expect(send.view.queryByRole('button', { name: 'Retry' })).toBeNull()
       act(() => { vi.advanceTimersByTime(4000) })
       expect(send.view.queryByRole('alert')).toBeNull()
