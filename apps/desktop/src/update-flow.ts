@@ -10,6 +10,7 @@
  * @module @deepseek-ai/dsh-desktop/update-flow
  */
 
+import { spawn } from 'node:child_process'
 import { createWriteStream } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -48,7 +49,11 @@ const COPY = {
   later: '稍后',
   install: '立即安装',
   downloaded: (version: string) => `新版本 ${version} 已下载完成`,
-  downloadedDetail: '点击「立即安装」打开安装包。安装程序会提示你关闭本应用。',
+  // Windows queues the installer behind this app's own exit; every other
+  // platform hands it to the desktop and stays open. See `launchInstaller`.
+  downloadedDetail: process.platform === 'win32'
+    ? '点击「立即安装」会退出本应用并启动安装程序。'
+    : '点击「立即安装」打开安装包。',
   current: '已是最新版本',
   currentDetail: (version: string) => `当前版本 ${version} 已经是最新的。`,
   failed: '检查更新失败',
@@ -116,6 +121,38 @@ async function downloadInstaller(update: AvailableUpdate, window: BrowserWindow 
   } finally {
     if (window !== undefined && !window.isDestroyed()) window.setProgressBar(-1)
   }
+}
+
+/**
+ * Start the downloaded installer.
+ *
+ * Handed to the operating system rather than run in place: this app is not
+ * signed to perform an unattended replacement of itself, so the last step is
+ * the person's own — open the .dmg, run the .AppImage, walk the Windows wizard.
+ *
+ * Windows cannot simply open it, though. The NSIS installer refuses to write
+ * over an installation whose application is still running: it finds the process
+ * by executable name, tries `taskkill`, and when that does not take it stops on
+ * "…无法关闭，请手动关闭它，然后点击重试继续" — and the process it is asking
+ * about is the one that just launched it. So there the installer is not opened
+ * but queued behind this app's own exit: the shell quits through its ordinary
+ * teardown, and `will-quit` — the last moment this process can still start
+ * anything — spawns the installer detached, so it outlives its parent and finds
+ * nothing left to close. `--updated` is what electron-updater passes in the
+ * same situation: it marks the run as an in-place update, which skips the
+ * "application is running, click OK to close it" prompt and keeps shortcuts the
+ * person may have moved or renamed instead of recreating them.
+ * @param installer - the downloaded installer's path.
+ */
+async function launchInstaller(installer: string): Promise<void> {
+  if (process.platform !== 'win32') {
+    await shell.openPath(installer)
+    return
+  }
+  app.once('will-quit', () => {
+    spawn(installer, ['--updated'], { detached: true, stdio: 'ignore' }).unref()
+  })
+  app.quit()
 }
 
 /** Whether a check is running, so a menu click during one cannot start a second. */
@@ -221,10 +258,7 @@ export async function checkForUpdates(window: BrowserWindow | undefined, interac
       defaultId: 0,
       cancelId: 1,
     })
-    // Handed to the OS rather than run by this app: opening a .dmg, an .exe
-    // installer, or an .AppImage is the person's own gesture, and this app is
-    // not signed to perform an unattended replacement of itself.
-    if (ready.response === 0) await shell.openPath(installer)
+    if (ready.response === 0) await launchInstaller(installer)
   } finally {
     running = false
   }
