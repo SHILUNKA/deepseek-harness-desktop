@@ -45,7 +45,7 @@ The `NativeCommandRunner` type is the injectable command boundary for host integ
 
 ### Opening a Host path
 
-`openNativePath(path, signal)` hands a path to the default application and prefers the named default browser for HTML and SVG where the platform can identify one. `openNativeTextFile(path, signal)` selects text-editor intent; on macOS it uses `open -t`. WSL paths are translated with `wslpath -w` before the Windows desktop receives them. `canOpenNativePath()` reports whether the current Host plausibly has a desktop target.
+`openNativePath(path, signal)` hands a path to the default application and prefers the named default browser for HTML and SVG where the platform can identify one. `openNativeTextFile(path, signal)` selects text-editor intent; on macOS it uses `open -t`, and on Windows it falls back to Notepad when the document's extension has no associated application (a fresh Windows associates nothing with `.yml` or `.yaml`, so `Invoke-Item` alone cannot open a settings document). WSL paths are translated with `wslpath -w` before the Windows desktop receives them. `canOpenNativePath()` reports whether the current Host plausibly has a desktop target.
 
 -----
 

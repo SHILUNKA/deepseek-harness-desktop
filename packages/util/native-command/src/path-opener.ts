@@ -107,6 +107,32 @@ async function openWindowsPath(path: string, signal: AbortSignal, run: PathOpene
   ], signal)
 }
 
+/**
+ * Open a text document on Windows, falling back to Notepad.
+ *
+ * Windows has no default text editor the way macOS does — only file-type
+ * associations — and a fresh installation associates nothing with `.yml` or
+ * `.yaml`. `Invoke-Item` then fails with no application to run, and the
+ * settings document cannot be opened at all. An association the person did set
+ * still wins, because it is tried first; Notepad is the fallback because every
+ * Windows carries it.
+ * @param path - Windows-resolvable text-document path.
+ * @param signal - caller lifetime; abort terminates the native command.
+ * @param run - the command runner seam.
+ */
+async function openWindowsTextFile(path: string, signal: AbortSignal, run: PathOpenerRunner): Promise<void> {
+  try {
+    await openWindowsPath(path, signal, run)
+  } catch {
+    // The swallowed error is Invoke-Item reporting no association for this
+    // extension, which nothing here can act on: either Notepad opens the file
+    // or the attempt below fails and reports that instead. An aborted caller
+    // is the one case that must not retry, so it rethrows first.
+    signal.throwIfAborted()
+    await run('notepad.exe', [path], signal)
+  }
+}
+
 /** Translate a WSL path before handing it to the Windows desktop. */
 async function openWslPath(path: string, signal: AbortSignal, run: PathOpenerRunner): Promise<void> {
   const translated = await run('wslpath', ['-w', path], signal)
@@ -137,7 +163,9 @@ async function openNativePathWithIntent(
   }
 
   if (platform === 'win32') {
-    await openWindowsPath(path, signal, run)
+    await (intent === 'text-editor'
+      ? openWindowsTextFile(path, signal, run)
+      : openWindowsPath(path, signal, run))
     return
   }
 

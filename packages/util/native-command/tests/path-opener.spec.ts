@@ -108,6 +108,20 @@ describe('native path opener', () => {
     )
   })
 
+  it('falls back to Notepad when Windows has no association for the document', async () => {
+    const run = vi.fn<PathOpenerRunner>(async (command) => {
+      // What Invoke-Item reports for a .yaml on a machine that associates nothing with it.
+      if (command === 'powershell.exe') throw new Error('No application is associated with the specified file')
+      return { stdout: '', stderr: '' }
+    })
+    await openNativeTextFile('C:\\work\\settings.yaml', signal(), { platform: 'win32', run })
+    expect(run).toHaveBeenLastCalledWith(
+      'notepad.exe',
+      ['C:\\work\\settings.yaml'],
+      expect.any(AbortSignal),
+    )
+  })
+
   it('opens with Linux xdg-open', async () => {
     const run = vi.fn<PathOpenerRunner>(async () => ({ stdout: '', stderr: '' }))
     await openNativePath('/tmp/a.txt', signal(), {
