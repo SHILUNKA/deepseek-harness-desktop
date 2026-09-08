@@ -325,6 +325,27 @@ files:
 extraResources:
   - from: node_modules
     to: app/node_modules
+    # \`files\` above never reaches this copy — extraResources takes the tree
+    # verbatim — so the filter is repeated here, and it is what keeps the
+    # installer from writing tens of thousands of files nothing loads. Of the
+    # 33,303 files a 0.1.x payload carried, over half were TypeScript sources,
+    # declarations, and source maps: 52% of the file count for 9% of the bytes,
+    # and install time follows the count, not the bytes. Every runtime consumer
+    # was checked: typert's loader reads package.json and its registry reads
+    # generated schemas, never a .d.ts; the worker-thread packages test
+    # \`import.meta.url\` to pick .cjs over .ts and take the .cjs branch once
+    # built. Documentation goes by exact name rather than \`*.md\`, because
+    # agent-presets ships SKILL.md and skill-badge ships an asset .md that are
+    # both loaded at runtime. LICENSE files stay: distributing them is a
+    # condition of the licenses themselves.
+    filter:
+      - "**/*"
+      - "!**/*.map"
+      - "!**/*.ts"
+      - "!**/*.mts"
+      - "!**/*.cts"
+      - "!**/README*.md"
+      - "!**/CHANGELOG*.md"
 mac:
   # Architecture comes from the command line, so each build pairs its target
   # with a closure deployed for that same architecture.
